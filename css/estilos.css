@@ -1,0 +1,222 @@
+/* RESETEO BÁSICO */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+
+body {
+    background-color: #fdfdfd; 
+    color: #333333; 
+    overscroll-behavior-y: none; 
+}
+
+/* --- VISTA MENÚ: LAYOUT PRINCIPAL --- */
+.layout-principal {
+    display: flex;
+    height: 100vh;
+    overflow: hidden; /* Evita scroll en toda la página, solo en las áreas designadas */
+}
+
+#sidebar-temas {
+    width: 260px;
+    background-color: #ffffff;
+    border-right: 2px solid #eaeaea;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+    box-shadow: 2px 0 5px rgba(212, 175, 55, 0.05);
+    /* NUEVO: Transición suave para ocultar/mostrar */
+    transition: margin-left 0.3s ease-in-out;
+    flex-shrink: 0; 
+}
+
+/* NUEVO: Esta clase oculta la barra hacia la izquierda */
+#sidebar-temas.oculto {
+    margin-left: -260px;
+}
+
+.logo-sidebar {
+    padding: 0 20px 20px 20px;
+    border-bottom: 1px solid #eaeaea;
+    margin-bottom: 20px;
+}
+
+.logo-sidebar h2 { font-size: 22px; margin-bottom: 10px; color: #111; }
+
+.contador-estilo {
+    background-color: #f6f1df;
+    color: #8c732a;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+#sidebar-temas h3 {
+    font-size: 14px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0 20px 10px 20px;
+}
+
+#lista-temas {
+    list-style: none;
+    overflow-y: auto; /* Permite scroll solo en los temas */
+    flex-grow: 1;
+}
+
+.item-tema {
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #555;
+    transition: background 0.2s, color 0.2s;
+    border-left: 4px solid transparent;
+}
+
+.item-tema:hover { background-color: #f9f9f9; }
+
+.item-tema.activo {
+    background-color: #faf7eb;
+    color: #8c732a;
+    font-weight: bold;
+    border-left: 4px solid #D4AF37; /* Toque dorado */
+}
+
+/* CONTENIDO DERECHO (Lista de cantos) */
+.contenido-derecho {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #fcfcfc;
+}
+
+/* Cabecera del menú (Ajustada para incluir el botón) */
+.cabecera-menu {
+    padding: 20px;
+    background-color: #ffffff;
+    border-bottom: 2px solid #eaeaea;
+    z-index: 10;
+    /* NUEVO: Flexbox para alinear el botón y el buscador */
+    display: flex;
+    gap: 15px; 
+    align-items: center;
+}
+
+/* NUEVO: Estilo del botón del menú */
+#btn-toggle-sidebar {
+    background: none;
+    border: none;
+    color: #D4AF37; /* Dorado */
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+#btn-toggle-sidebar:active {
+    background-color: #f6f1df;
+}
+
+#buscador {
+    width: 100%;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background-color: #f5f5f5;
+    font-size: 16px;
+    outline: none;
+}
+#buscador:focus { border-color: #D4AF37; }
+
+/* NUEVA LISTA VERTICAL SIMPLE */
+.lista-vertical {
+    padding: 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.tarjeta-canto {
+    background-color: #ffffff;
+    padding: 18px 20px;
+    margin-bottom: 10px; /* Separación entre cantos */
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #eaeaea;
+    border-left: 5px solid #D4AF37; /* Línea dorada */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.tarjeta-canto h3 { font-size: 17px; color: #222; }
+
+.tema-etiqueta {
+    background-color: #f0f0f0;
+    color: #666;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+/* --- VISTA VISOR --- */
+#vista-visor {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #e6e6e6; z-index: 100;
+}
+
+#barra-superior {
+    position: absolute; top: 0; left: 0; width: 100%; height: 60px;
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    display: flex; align-items: center; padding: 0 15px;
+    transition: transform 0.3s ease-in-out; z-index: 1000;
+    border-bottom: 1px solid #ccc;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.barra-oculta { transform: translateY(-100%); }
+
+#btn-cerrar { background: none; border: none; color: #D4AF37; cursor: pointer; padding: 10px; display: flex; align-items: center; justify-content: center; }
+
+#titulo-canto { flex-grow: 1; text-align: center; font-size: 18px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+
+#btn-reset-zoom {
+    background-color: rgba(212, 175, 55, 0.1); /* Fondo dorado transparente */
+    border: 1px solid #D4AF37;
+    color: #D4AF37;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    transition: all 0.2s;
+}
+
+#btn-reset-zoom:active {
+    background-color: #D4AF37;
+    color: white;
+}
+
+#contenedor-pdf {
+    width: 100%; height: 100vh;
+    overflow: auto; 
+    display: flex; flex-direction: column; align-items: center;
+    padding-top: 60px;
+    /* Evita que el navegador intente hacer su propio zoom nativo conflictivo */
+    touch-action: pan-x pan-y; 
+}
+
+canvas.pdf-page {
+    width: 100%; 
+    height: auto;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    /* Se quitó la transición de ancho para que el zoom con dedos sea instantáneo y fluido */
+    transform-origin: center top;
+}
