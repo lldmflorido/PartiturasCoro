@@ -8,8 +8,14 @@ let pinchZoomando = false;
 let distanciaInicial = 0;
 let zoomInicial = 100;
 let ultimoScroll = 0;
+let centroToqueX = 0;
+let centroToqueY = 0;
 let porcentajeX = 0;
 let porcentajeY = 0;
+let centroInicialX = 0;
+let centroInicialY = 0;
+let scrollInicialX = 0;
+let scrollInicialY = 0;
 
 // --- ELEMENTOS DEL DOM ---
 const contenedorLista = document.getElementById('lista-cantos');
@@ -270,25 +276,30 @@ contenedorPdf.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
         pinchZoomando = true;
         
-        // 1. Distancia inicial para el nivel de zoom
+        // 1. Distancia inicial para el zoom
         distanciaInicial = Math.hypot(
             e.touches[0].pageX - e.touches[1].pageX,
             e.touches[0].pageY - e.touches[1].pageY
         );
         zoomInicial = nivelZoom;
 
-        // 2. Punto medio inicial de los dedos
-        centroInicialX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
-        centroInicialY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
-        
+        // 2. Punto medio de los dedos respecto al contenedor
+        const rect = contenedorPdf.getBoundingClientRect();
+        centroToqueX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+        centroToqueY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+
+        // 3. Posición de scroll actual
         scrollInicialX = contenedorPdf.scrollLeft;
         scrollInicialY = contenedorPdf.scrollTop;
+
+        // 4. Calculamos en qué porcentaje de la hoja estamos tocando
+        // Esto es lo que permite que el zoom no "brinque"
+        porcentajeX = (scrollInicialX + centroToqueX) / contenedorPdf.scrollWidth;
+        porcentajeY = (scrollInicialY + centroToqueY) / contenedorPdf.scrollHeight;
         
-        // Calculamos qué parte de la hoja estamos tocando exactamente
-        const rect = contenedorPdf.getBoundingClientRect();
-        // IMPORTANTE: Aquí quitamos el "let" para usar las variables globales
-        porcentajeX = (scrollInicialX + (centroInicialX - rect.left)) / contenedorPdf.scrollWidth;
-        porcentajeY = (scrollInicialY + (centroInicialY - rect.top)) / contenedorPdf.scrollHeight;
+        // Guardamos el centro inicial para el movimiento (Pan)
+        centroInicialX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
+        centroInicialY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
     }
 }, { passive: false });
 
@@ -296,7 +307,7 @@ contenedorPdf.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && pinchZoomando) {
         e.preventDefault(); 
         
-        // A. ZOOM
+        // --- A. ZOOM ---
         const distanciaActual = Math.hypot(
             e.touches[0].pageX - e.touches[1].pageX,
             e.touches[0].pageY - e.touches[1].pageY
@@ -308,18 +319,22 @@ contenedorPdf.addEventListener('touchmove', (e) => {
         if (nuevoZoom > 400) nuevoZoom = 400;
         
         nivelZoom = nuevoZoom;
-        actualizarZoom(); 
+        actualizarZoom(); // Cambia el tamaño de los canvas
 
-        // B. MOVIMIENTO (PAN) SIMULTÁNEO
+        // --- B. MOVIMIENTO (PAN) SIMULTÁNEO ---
         const centroActualX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
         const centroActualY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
-        const rect = contenedorPdf.getBoundingClientRect();
         
-        // Ajustamos el scroll para que el punto que tocamos siga bajo los dedos
-        contenedorPdf.scrollLeft = (porcentajeX * contenedorPdf.scrollWidth) - (centroActualX - rect.left);
-        contenedorPdf.scrollTop = (porcentajeY * contenedorPdf.scrollHeight) - (centroActualY - rect.top);
+        // Calculamos el desplazamiento de los dedos
+        const deltaX = centroActualX - centroInicialX;
+        const deltaY = centroActualY - centroInicialY;
+
+        // LA MAGIA: Ajustamos el scroll usando el porcentaje y el movimiento
+        contenedorPdf.scrollLeft = (porcentajeX * contenedorPdf.scrollWidth) - centroToqueX;
+        contenedorPdf.scrollTop = (porcentajeY * contenedorPdf.scrollHeight) - centroToqueY;
     }
 }, { passive: false });
+
 contenedorPdf.addEventListener('touchend', (e) => {
     if (e.touches.length < 2) {
         pinchZoomando = false;

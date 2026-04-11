@@ -244,9 +244,8 @@ body {
 }
 
 #contenedor-pdf.zoom-activo {
-    display: block !important; /* Obligamos a que use el modo bloque */
-    text-align: left;           /* Alineamos todo a la izquierda para el cálculo matemático */
-    padding-top: 70px;          /* Mantenemos espacio para la barra superior */
+    display: block !important;
+    text-align: left;
     padding-left: 0;
     padding-right: 0;
 }
