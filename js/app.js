@@ -232,14 +232,31 @@ document.getElementById('btn-cerrar').addEventListener('click', () => {
 
 // --- 8. LÓGICA DE ZOOM TÁCTIL ---
 function actualizarZoom() {
-    document.querySelectorAll('.pdf-page').forEach(canvas => {
+    const paginas = document.querySelectorAll('.pdf-page');
+    
+    paginas.forEach(canvas => {
         canvas.style.width = `${nivelZoom}%`;
+        
+        // Si hay zoom, alineamos a la izquierda para que el scroll 
+        // funcione correctamente desde el inicio.
+        if (nivelZoom > 100) {
+            canvas.style.marginLeft = "0";
+            canvas.style.marginRight = "0";
+        } else {
+            canvas.style.marginLeft = "auto";
+            canvas.style.marginRight = "auto";
+        }
     });
     
     if (nivelZoom > 105) {
         btnResetZoom.style.display = 'flex';
+        // Forzamos al contenedor a mostrar scrollbars si es necesario
+        contenedorPdf.style.overflow = 'auto';
     } else {
         btnResetZoom.style.display = 'none';
+        // Volvemos al scroll normal
+        contenedorPdf.style.overflowX = 'hidden';
+        contenedorPdf.scrollTop = 0; // Regresa arriba al quitar zoom
     }
 }
 
@@ -295,3 +312,11 @@ contenedorPdf.addEventListener('scroll', () => {
     }
     ultimoScroll = scrollActual;
 });
+// --- 10. REGISTRO DEL SERVICE WORKER PARA MODO OFFLINE ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker listo', reg.scope))
+            .catch(err => console.warn('Error al registrar SW', err));
+    });
+}
