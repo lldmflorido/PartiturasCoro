@@ -307,7 +307,7 @@ contenedorPdf.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && pinchZoomando) {
         e.preventDefault(); 
         
-        // --- A. ZOOM ---
+        // --- A. GESTIÓN DEL ZOOM ---
         const distanciaActual = Math.hypot(
             e.touches[0].pageX - e.touches[1].pageX,
             e.touches[0].pageY - e.touches[1].pageY
@@ -319,19 +319,19 @@ contenedorPdf.addEventListener('touchmove', (e) => {
         if (nuevoZoom > 400) nuevoZoom = 400;
         
         nivelZoom = nuevoZoom;
-        actualizarZoom(); // Cambia el tamaño de los canvas
+        actualizarZoom(); 
 
-        // --- B. MOVIMIENTO (PAN) SIMULTÁNEO ---
-        const centroActualX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
-        const centroActualY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
+        // --- B. MOVIMIENTO (PAN) INTUITIVO ---
+        const rect = contenedorPdf.getBoundingClientRect();
         
-        // Calculamos el desplazamiento de los dedos
-        const deltaX = centroActualX - centroInicialX;
-        const deltaY = centroActualY - centroInicialY;
+        // Calculamos el centro ACTUAL de los dedos en este preciso momento
+        const centroActualX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+        const centroActualY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
 
-        // LA MAGIA: Ajustamos el scroll usando el porcentaje y el movimiento
-        contenedorPdf.scrollLeft = (porcentajeX * contenedorPdf.scrollWidth) - centroToqueX;
-        contenedorPdf.scrollTop = (porcentajeY * contenedorPdf.scrollHeight) - centroToqueY;
+        // LA CLAVE: El scroll debe ser la posición escalada MENOS el centro actual
+        // Esto hace que el punto que tocas se quede "pegado" a tus dedos
+        contenedorPdf.scrollLeft = (porcentajeX * contenedorPdf.scrollWidth) - centroActualX;
+        contenedorPdf.scrollTop = (porcentajeY * contenedorPdf.scrollHeight) - centroActualY;
     }
 }, { passive: false });
 
