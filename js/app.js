@@ -260,14 +260,29 @@ function actualizarZoom() {
     });
 }
 
+let centroInicialX = 0;
+let centroInicialY = 0;
+let scrollInicialX = 0;
+let scrollInicialY = 0;
+
 contenedorPdf.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
         pinchZoomando = true;
+        
+        // 1. Distancia inicial para el zoom
         distanciaInicial = Math.hypot(
             e.touches[0].pageX - e.touches[1].pageX,
             e.touches[0].pageY - e.touches[1].pageY
         );
         zoomInicial = nivelZoom;
+
+        // 2. Punto medio inicial para el movimiento (Pan)
+        centroInicialX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
+        centroInicialY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
+        
+        // 3. Posición de scroll actual
+        scrollInicialX = contenedorPdf.scrollLeft;
+        scrollInicialY = contenedorPdf.scrollTop;
     }
 }, { passive: false });
 
@@ -275,19 +290,32 @@ contenedorPdf.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && pinchZoomando) {
         e.preventDefault(); 
         
+        // --- A. GESTIÓN DEL ZOOM ---
         const distanciaActual = Math.hypot(
             e.touches[0].pageX - e.touches[1].pageX,
             e.touches[0].pageY - e.touches[1].pageY
         );
-        
         const escala = distanciaActual / distanciaInicial;
         let nuevoZoom = zoomInicial * escala;
         
         if (nuevoZoom < 100) nuevoZoom = 100;
         if (nuevoZoom > 400) nuevoZoom = 400;
         
+        const zoomAnterior = nivelZoom;
         nivelZoom = nuevoZoom;
         actualizarZoom();
+
+        // --- B. GESTIÓN DEL MOVIMIENTO (PAN) SIMULTÁNEO ---
+        const centroActualX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
+        const centroActualY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
+
+        // Calculamos cuánto se movieron los dedos
+        const deltaX = centroActualX - centroInicialX;
+        const deltaY = centroActualY - centroInitialY;
+
+        // Aplicamos el movimiento al scroll mientras escalamos
+        contenedorPdf.scrollLeft = scrollInicialX - deltaX;
+        contenedorPdf.scrollTop = scrollInicialY - deltaY;
     }
 }, { passive: false });
 

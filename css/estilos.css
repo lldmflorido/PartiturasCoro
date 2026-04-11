@@ -252,12 +252,14 @@ body {
 .pdf-page {
     display: block;
     margin-bottom: 20px;
-    flex-shrink: 0; /* Evita que el navegador intente aplastar la imagen */
+    flex-shrink: 0;
     max-width: none !important;
     background-color: white;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    /* NUEVO: Ayuda a la GPU de la tablet a procesar el movimiento suave */
+    will-change: transform, width; 
+    transform-origin: top left;
 }
-
 canvas.pdf-page {
     width: 100%; 
     height: auto;
