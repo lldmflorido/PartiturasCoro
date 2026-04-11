@@ -243,23 +243,20 @@ body {
 }
 
 #contenedor-pdf.zoom-activo {
-    display: block; /* Cambiamos flex por block para control total de coordenadas */
+    display: block; 
+    text-align: left; /* Alineación obligatoria para que el scroll sea preciso */
     align-items: flex-start !important;
-    text-align: left; /* La partitura nace a la izquierda para el cálculo de porcentaje */
-    padding-left: 0; 
-    padding-right: 0;
 }
 
 .pdf-page {
-    display: block;
-    margin: 0 auto 20px auto; /* Centrado solo cuando no hay zoom */
-    max-width: none !important;
+    /* ... tus estilos anteriores ... */
     transform-origin: top left; /* El ancla matemática obligatoria */
-    will-change: width, transform;
+    will-change: width, scroll-position; /* Avisa al navegador para optimizar */
 }
 
+/* Evitamos que los márgenes interfieran con el cálculo de porcentaje */
 #contenedor-pdf.zoom-activo .pdf-page {
-    margin-left: 0; /* Al hacer zoom, pegamos al borde para que el scroll sea preciso */
+    margin-left: 0;
     margin-right: 0;
 }
 

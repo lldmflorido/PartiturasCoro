@@ -1,4 +1,4 @@
-const NOMBRE_CACHE = 'COROFLORIDO-v4';
+const NOMBRE_CACHE = 'COROFLORIDO-v5';
 const ARCHIVOS_BASE = [
     './',
     './index.html',

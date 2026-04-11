@@ -188,8 +188,7 @@ function abrirVisor(canto) {
                 // MAGIA PARA LA NITIDEZ:
                 // Detectamos la calidad de la pantalla (Retina/4K suelen ser 2 o 3)
                 const dpr = window.devicePixelRatio || 1;
-                // Subimos la escala a 3.0 para asegurar nitidez incluso con zoom
-                const escalaBase = 3.0; 
+                const escalaBase = 1.5; 
                 const viewport = page.getViewport({ scale: escalaBase }); 
 
                 const canvas = document.createElement('canvas');
@@ -198,7 +197,12 @@ function abrirVisor(canto) {
                 // Ajustamos el tamaño interno del canvas (pixeles reales)
                 canvas.width = viewport.width * dpr;
                 canvas.height = viewport.height * dpr;
-                
+		// IMPORTANTE: Limita el tamaño máximo para evitar crashes en dispositivos viejos
+		if (canvas.width > 4096 || canvas.height > 4096) {
+    			const reduccion = 4096 / Math.max(canvas.width, canvas.height);
+    			canvas.width *= reduccion;
+    			canvas.height *= reduccion;
+		}
                 // Ajustamos el tamaño visual (lo que ves en pantalla)
                 canvas.style.width = `${nivelZoom}%`; 
                 canvas.style.height = "auto"; 
@@ -227,6 +231,14 @@ function abrirVisor(canto) {
 document.getElementById('btn-cerrar').addEventListener('click', () => {
     document.getElementById('vista-visor').style.display = 'none';
     document.getElementById('vista-menu').style.display = 'flex';
+    
+    // LIMPIEZA ACTIVA DE MEMORIA
+    const canvases = contenedorPdf.querySelectorAll('canvas');
+    canvases.forEach(canvas => {
+        canvas.width = 0;
+        canvas.height = 0;
+        canvas.remove();
+    });
     contenedorPdf.innerHTML = ''; 
 });
 
@@ -260,30 +272,34 @@ function actualizarZoom() {
     });
 }
 
-let centroToqueX = 0;
-let centroToqueY = 0;
-let porcentajeX = 0;
-let porcentajeY = 0;
+let centroInicialX = 0;
+let centroInicialY = 0;
+let scrollInicialX = 0;
+let scrollInicialY = 0;
 
 contenedorPdf.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
         pinchZoomando = true;
         
-        // 1. Distancia para nivel de zoom
+        // 1. Distancia inicial para el nivel de zoom
         distanciaInicial = Math.hypot(
             e.touches[0].pageX - e.touches[1].pageX,
             e.touches[0].pageY - e.touches[1].pageY
         );
         zoomInicial = nivelZoom;
 
-        // 2. ENCONTRAR EL PUNTO "ANCLA" (Donde están tus dedos sobre la partitura)
+        // 2. Punto medio inicial de los dedos (en pantalla)
+        centroInicialX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
+        centroInicialY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
+        
+        // 3. Posición de scroll actual para movernos desde aquí
+        scrollInicialX = contenedorPdf.scrollLeft;
+        scrollInicialY = contenedorPdf.scrollTop;
+        
+        // Calculamos qué porcentaje de la partitura estamos tocando
         const rect = contenedorPdf.getBoundingClientRect();
-        centroToqueX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
-        centroToqueY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
-
-        // 3. Calcular qué porcentaje de la partitura estamos tocando actualmente
-        porcentajeX = (contenedorPdf.scrollLeft + centroToqueX) / contenedorPdf.scrollWidth;
-        porcentajeY = (contenedorPdf.scrollTop + centroToqueY) / contenedorPdf.scrollHeight;
+        porcentajeX = (scrollInicialX + (centroInicialX - rect.left)) / contenedorPdf.scrollWidth;
+        porcentajeY = (scrollInicialY + (centroInicialY - rect.top)) / contenedorPdf.scrollHeight;
     }
 }, { passive: false });
 
@@ -291,25 +307,30 @@ contenedorPdf.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && pinchZoomando) {
         e.preventDefault(); 
         
+        // --- A. GESTIÓN DEL ZOOM ---
         const distanciaActual = Math.hypot(
             e.touches[0].pageX - e.touches[1].pageX,
             e.touches[0].pageY - e.touches[1].pageY
         );
-        
         const escala = distanciaActual / distanciaInicial;
         let nuevoZoom = zoomInicial * escala;
         
-        // Límites de seguridad
+        // Límites de seguridad (No menos de 100%, no más de 400%)
         if (nuevoZoom < 100) nuevoZoom = 100;
         if (nuevoZoom > 400) nuevoZoom = 400;
         
         nivelZoom = nuevoZoom;
-        actualizarZoom(); // Esto cambia el ancho (scrollWidth/scrollHeight cambian)
+        actualizarZoom(); // Cambia el tamaño de los canvas
 
-        // 4. LA MAGIA: Re-posicionar el scroll para que el punto ancla no se mueva
-        // Calculamos dónde debería estar el scroll para que el porcentaje que tocamos siga bajo los dedos
-        const nuevoScrollLeft = (porcentajeX * contenedorPdf.scrollWidth) - centroToqueX;
-        const nuevoScrollTop = (porcentajeY * contenedorPdf.scrollHeight) - centroToqueY;
+        // --- B. GESTIÓN DEL MOVIMIENTO (PAN) ---
+        const centroActualX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
+        const centroActualY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
+
+        const rect = contenedorPdf.getBoundingClientRect();
+        
+        // La "Magia": Ajustamos el scroll basándonos en el nuevo tamaño + el movimiento de los dedos
+        const nuevoScrollLeft = (porcentajeX * contenedorPdf.scrollWidth) - (centroActualX - rect.left);
+        const nuevoScrollTop = (porcentajeY * contenedorPdf.scrollHeight) - (centroActualY - rect.top);
 
         contenedorPdf.scrollLeft = nuevoScrollLeft;
         contenedorPdf.scrollTop = nuevoScrollTop;
