@@ -8,6 +8,8 @@ let pinchZoomando = false;
 let distanciaInicial = 0;
 let zoomInicial = 100;
 let ultimoScroll = 0;
+let porcentajeX = 0;
+let porcentajeY = 0;
 
 // --- ELEMENTOS DEL DOM ---
 const contenedorLista = document.getElementById('lista-cantos');
@@ -245,40 +247,24 @@ document.getElementById('btn-cerrar').addEventListener('click', () => {
     contenedorPdf.innerHTML = ''; 
 });
 
-// --- 8. LÓGICA DE ZOOM TÁCTIL ---
+// --- 8. LÓGICA DE ZOOM PROFESIONAL ---
 function actualizarZoom() {
     const paginas = document.querySelectorAll('.pdf-page');
     
     if (nivelZoom > 100) {
-        // ESTADO 2: Navegación Libre
         contenedorPdf.classList.add('zoom-activo');
         btnResetZoom.style.display = 'flex';
     } else {
-        // ESTADO 1: Estático y cubriendo ancho
         contenedorPdf.classList.remove('zoom-activo');
         btnResetZoom.style.display = 'none';
-        
-        // Limpiamos cualquier rastro de desplazamiento lateral
         contenedorPdf.scrollLeft = 0; 
     }
 
     paginas.forEach(canvas => {
-        // Aplicamos el tamaño. Al ser 100%, cubrirá el ancho por el align-items center.
         canvas.style.width = `${nivelZoom}%`;
-        
-        // En Free Roam quitamos el margin auto para que el scroll sea real desde el borde
-        if (nivelZoom > 100) {
-            canvas.style.margin = "20px"; 
-        } else {
-            canvas.style.margin = "10px auto";
-        }
+        canvas.style.margin = (nivelZoom > 100) ? "20px" : "10px auto";
     });
 }
-
-let centroInicialX = 0;
-let centroInicialY = 0;
-let scrollInicialX = 0;
-let scrollInicialY = 0;
 
 contenedorPdf.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
@@ -291,18 +277,18 @@ contenedorPdf.addEventListener('touchstart', (e) => {
         );
         zoomInicial = nivelZoom;
 
-        // 2. Punto medio inicial de los dedos (en pantalla)
+        // 2. Punto medio inicial de los dedos
         centroInicialX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
         centroInicialY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
         
-        // 3. Posición de scroll actual para movernos desde aquí
         scrollInicialX = contenedorPdf.scrollLeft;
         scrollInicialY = contenedorPdf.scrollTop;
         
-        // Calculamos qué porcentaje de la partitura estamos tocando
+        // Calculamos qué parte de la hoja estamos tocando exactamente
         const rect = contenedorPdf.getBoundingClientRect();
-        let porcentajeX = (scrollInicialX + (centroInicialX - rect.left)) / contenedorPdf.scrollWidth;
-        let porcentajeY = (scrollInicialY + (centroInicialY - rect.top)) / contenedorPdf.scrollHeight;
+        // IMPORTANTE: Aquí quitamos el "let" para usar las variables globales
+        porcentajeX = (scrollInicialX + (centroInicialX - rect.left)) / contenedorPdf.scrollWidth;
+        porcentajeY = (scrollInicialY + (centroInicialY - rect.top)) / contenedorPdf.scrollHeight;
     }
 }, { passive: false });
 
@@ -310,7 +296,7 @@ contenedorPdf.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && pinchZoomando) {
         e.preventDefault(); 
         
-        // --- A. GESTIÓN DEL ZOOM ---
+        // A. ZOOM
         const distanciaActual = Math.hypot(
             e.touches[0].pageX - e.touches[1].pageX,
             e.touches[0].pageY - e.touches[1].pageY
@@ -318,28 +304,22 @@ contenedorPdf.addEventListener('touchmove', (e) => {
         const escala = distanciaActual / distanciaInicial;
         let nuevoZoom = zoomInicial * escala;
         
-        // Límites de seguridad (No menos de 100%, no más de 400%)
         if (nuevoZoom < 100) nuevoZoom = 100;
         if (nuevoZoom > 400) nuevoZoom = 400;
         
         nivelZoom = nuevoZoom;
-        actualizarZoom(); // Cambia el tamaño de los canvas
+        actualizarZoom(); 
 
-        // --- B. GESTIÓN DEL MOVIMIENTO (PAN) ---
+        // B. MOVIMIENTO (PAN) SIMULTÁNEO
         const centroActualX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
         const centroActualY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
-
         const rect = contenedorPdf.getBoundingClientRect();
         
-        // La "Magia": Ajustamos el scroll basándonos en el nuevo tamaño + el movimiento de los dedos
-        const nuevoScrollLeft = (porcentajeX * contenedorPdf.scrollWidth) - (centroActualX - rect.left);
-        const nuevoScrollTop = (porcentajeY * contenedorPdf.scrollHeight) - (centroActualY - rect.top);
-
-        contenedorPdf.scrollLeft = nuevoScrollLeft;
-        contenedorPdf.scrollTop = nuevoScrollTop;
+        // Ajustamos el scroll para que el punto que tocamos siga bajo los dedos
+        contenedorPdf.scrollLeft = (porcentajeX * contenedorPdf.scrollWidth) - (centroActualX - rect.left);
+        contenedorPdf.scrollTop = (porcentajeY * contenedorPdf.scrollHeight) - (centroActualY - rect.top);
     }
 }, { passive: false });
-
 contenedorPdf.addEventListener('touchend', (e) => {
     if (e.touches.length < 2) {
         pinchZoomando = false;

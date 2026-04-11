@@ -244,15 +244,24 @@ body {
 }
 
 #contenedor-pdf.zoom-activo {
-    display: block; 
-    text-align: left; /* Alineación obligatoria para que el scroll sea preciso */
-    align-items: flex-start !important;
+    display: block !important; /* Obligamos a que use el modo bloque */
+    text-align: left;           /* Alineamos todo a la izquierda para el cálculo matemático */
+    padding-top: 70px;          /* Mantenemos espacio para la barra superior */
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .pdf-page {
-    /* ... tus estilos anteriores ... */
-    transform-origin: top left; /* El ancla matemática obligatoria */
-    will-change: width, scroll-position; /* Avisa al navegador para optimizar */
+    display: block;
+    margin: 0 auto 20px auto; /* Centrado por defecto cuando no hay zoom */
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    
+    /* CONFIGURACIÓN PARA EL ZOOM PROFESIONAL */
+    max-width: none !important; /* Permite que crezca más allá del 100% */
+    transform-origin: top left; /* El ancla matemática: crece desde la esquina */
+    will-change: width, scroll-position; /* Optimiza el rendimiento en la tablet */
+    height: auto; /* Mantiene la proporción de la partitura */
 }
 
 /* Evitamos que los márgenes interfieran con el cálculo de porcentaje */
