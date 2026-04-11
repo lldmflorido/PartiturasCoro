@@ -234,30 +234,30 @@ document.getElementById('btn-cerrar').addEventListener('click', () => {
 function actualizarZoom() {
     const paginas = document.querySelectorAll('.pdf-page');
     
+    if (nivelZoom > 100) {
+        // ESTADO 2: Navegación Libre
+        contenedorPdf.classList.add('zoom-activo');
+        btnResetZoom.style.display = 'flex';
+    } else {
+        // ESTADO 1: Estático y cubriendo ancho
+        contenedorPdf.classList.remove('zoom-activo');
+        btnResetZoom.style.display = 'none';
+        
+        // Limpiamos cualquier rastro de desplazamiento lateral
+        contenedorPdf.scrollLeft = 0; 
+    }
+
     paginas.forEach(canvas => {
+        // Aplicamos el tamaño. Al ser 100%, cubrirá el ancho por el align-items center.
         canvas.style.width = `${nivelZoom}%`;
         
-        // Si hay zoom, alineamos a la izquierda para que el scroll 
-        // funcione correctamente desde el inicio.
+        // En Free Roam quitamos el margin auto para que el scroll sea real desde el borde
         if (nivelZoom > 100) {
-            canvas.style.marginLeft = "0";
-            canvas.style.marginRight = "0";
+            canvas.style.margin = "20px"; 
         } else {
-            canvas.style.marginLeft = "auto";
-            canvas.style.marginRight = "auto";
+            canvas.style.margin = "10px auto";
         }
     });
-    
-    if (nivelZoom > 105) {
-        btnResetZoom.style.display = 'flex';
-        // Forzamos al contenedor a mostrar scrollbars si es necesario
-        contenedorPdf.style.overflow = 'auto';
-    } else {
-        btnResetZoom.style.display = 'none';
-        // Volvemos al scroll normal
-        contenedorPdf.style.overflowX = 'hidden';
-        contenedorPdf.scrollTop = 0; // Regresa arriba al quitar zoom
-    }
 }
 
 contenedorPdf.addEventListener('touchstart', (e) => {
@@ -298,8 +298,25 @@ contenedorPdf.addEventListener('touchend', (e) => {
 });
 
 btnResetZoom.addEventListener('click', () => {
+    // 1. Guardamos la posición actual (proporción del scroll)
+    const posicionActual = contenedorPdf.scrollTop;
+    const alturaTotalActual = contenedorPdf.scrollHeight;
+    const proporcion = posicionActual / alturaTotalActual;
+
+    // 2. Reseteamos el zoom
     nivelZoom = 100;
     actualizarZoom();
+
+    // 3. Esperamos un instante a que el navegador recalcule el tamaño de las hojas
+    // y aplicamos el scroll a la misma proporción, pero reseteando el horizontal
+    setTimeout(() => {
+        const nuevaAlturaTotal = contenedorPdf.scrollHeight;
+        contenedorPdf.scrollTo({
+            top: proporcion * nuevaAlturaTotal,
+            left: 0,
+            behavior: 'smooth'
+        });
+    }, 50); // 50ms son suficientes para que el DOM se entere del cambio
 });
 
 // --- 9. BARRA AUTO-OCULTABLE ---

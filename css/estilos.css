@@ -229,26 +229,33 @@ body {
     display: none;
 }
 
-/* El contenedor donde caen los PDFs */
 #contenedor-pdf {
     width: 100%;
-    height: 100%;
-    overflow: auto;
-    display: block; 
-    text-align: center;
-    background-color: #f4f4f4; /* Un gris muy claro para que la "hoja" blanca se note */
+    height: 100vh;
+    overflow: auto; /* Activa scroll vertical y horizontal */
+    display: flex; /* Usamos flex para el centrado inicial */
+    flex-direction: column;
+    align-items: center; /* Centra por defecto */
+    background-color: #f4f4f4;
     -webkit-overflow-scrolling: touch;
     padding-top: 70px;
+    box-sizing: border-box;
 }
 
-/* La hoja de la partitura */
+/* Busca esta línea y cámbiale el nombre */
+#contenedor-pdf.zoom-activo {
+    align-items: flex-start !important; 
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
 .pdf-page {
     display: block;
-    margin: 15px auto;
+    margin-bottom: 20px;
+    flex-shrink: 0; /* Evita que el navegador intente aplastar la imagen */
     max-width: none !important;
-    /* La sombra se verá genial sobre el fondo claro */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
     background-color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 canvas.pdf-page {
