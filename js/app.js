@@ -260,29 +260,30 @@ function actualizarZoom() {
     });
 }
 
-let centroInicialX = 0;
-let centroInicialY = 0;
-let scrollInicialX = 0;
-let scrollInicialY = 0;
+let centroToqueX = 0;
+let centroToqueY = 0;
+let porcentajeX = 0;
+let porcentajeY = 0;
 
 contenedorPdf.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
         pinchZoomando = true;
         
-        // 1. Distancia inicial para el zoom
+        // 1. Distancia para nivel de zoom
         distanciaInicial = Math.hypot(
             e.touches[0].pageX - e.touches[1].pageX,
             e.touches[0].pageY - e.touches[1].pageY
         );
         zoomInicial = nivelZoom;
 
-        // 2. Punto medio inicial para el movimiento (Pan)
-        centroInicialX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
-        centroInicialY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
-        
-        // 3. Posición de scroll actual
-        scrollInicialX = contenedorPdf.scrollLeft;
-        scrollInicialY = contenedorPdf.scrollTop;
+        // 2. ENCONTRAR EL PUNTO "ANCLA" (Donde están tus dedos sobre la partitura)
+        const rect = contenedorPdf.getBoundingClientRect();
+        centroToqueX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+        centroToqueY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+
+        // 3. Calcular qué porcentaje de la partitura estamos tocando actualmente
+        porcentajeX = (contenedorPdf.scrollLeft + centroToqueX) / contenedorPdf.scrollWidth;
+        porcentajeY = (contenedorPdf.scrollTop + centroToqueY) / contenedorPdf.scrollHeight;
     }
 }, { passive: false });
 
@@ -290,32 +291,28 @@ contenedorPdf.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2 && pinchZoomando) {
         e.preventDefault(); 
         
-        // --- A. GESTIÓN DEL ZOOM ---
         const distanciaActual = Math.hypot(
             e.touches[0].pageX - e.touches[1].pageX,
             e.touches[0].pageY - e.touches[1].pageY
         );
+        
         const escala = distanciaActual / distanciaInicial;
         let nuevoZoom = zoomInicial * escala;
         
+        // Límites de seguridad
         if (nuevoZoom < 100) nuevoZoom = 100;
         if (nuevoZoom > 400) nuevoZoom = 400;
         
-        const zoomAnterior = nivelZoom;
         nivelZoom = nuevoZoom;
-        actualizarZoom();
+        actualizarZoom(); // Esto cambia el ancho (scrollWidth/scrollHeight cambian)
 
-        // --- B. GESTIÓN DEL MOVIMIENTO (PAN) SIMULTÁNEO ---
-        const centroActualX = (e.touches[0].pageX + e.touches[1].pageX) / 2;
-        const centroActualY = (e.touches[0].pageY + e.touches[1].pageY) / 2;
+        // 4. LA MAGIA: Re-posicionar el scroll para que el punto ancla no se mueva
+        // Calculamos dónde debería estar el scroll para que el porcentaje que tocamos siga bajo los dedos
+        const nuevoScrollLeft = (porcentajeX * contenedorPdf.scrollWidth) - centroToqueX;
+        const nuevoScrollTop = (porcentajeY * contenedorPdf.scrollHeight) - centroToqueY;
 
-        // Calculamos cuánto se movieron los dedos
-        const deltaX = centroActualX - centroInicialX;
-        const deltaY = centroActualY - centroInitialY;
-
-        // Aplicamos el movimiento al scroll mientras escalamos
-        contenedorPdf.scrollLeft = scrollInicialX - deltaX;
-        contenedorPdf.scrollTop = scrollInicialY - deltaY;
+        contenedorPdf.scrollLeft = nuevoScrollLeft;
+        contenedorPdf.scrollTop = nuevoScrollTop;
     }
 }, { passive: false });
 
