@@ -178,25 +178,49 @@ function abrirVisor(canto) {
     
     nivelZoom = 100; 
     actualizarZoom(); 
-    contenedorPdf.innerHTML = '<p style="margin-top:80px; text-align:center; color:#555;">Cargando partitura...</p>';
+    contenedorPdf.innerHTML = '<p style="margin-top:80px; text-align:center; color:#555;">Cargando partitura en alta resolución...</p>';
 
     pdfjsLib.getDocument(`Partituras/${canto.archivo}`).promise.then(pdf => {
         contenedorPdf.innerHTML = ''; 
+        
         for (let i = 1; i <= pdf.numPages; i++) {
             pdf.getPage(i).then(page => {
-                const viewport = page.getViewport({ scale: 2.0 }); 
+                // MAGIA PARA LA NITIDEZ:
+                // Detectamos la calidad de la pantalla (Retina/4K suelen ser 2 o 3)
+                const dpr = window.devicePixelRatio || 1;
+                // Subimos la escala a 3.0 para asegurar nitidez incluso con zoom
+                const escalaBase = 3.0; 
+                const viewport = page.getViewport({ scale: escalaBase }); 
+
                 const canvas = document.createElement('canvas');
                 canvas.className = 'pdf-page';
-                canvas.style.width = `${nivelZoom}%`; 
                 
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+                // Ajustamos el tamaño interno del canvas (pixeles reales)
+                canvas.width = viewport.width * dpr;
+                canvas.height = viewport.height * dpr;
+                
+                // Ajustamos el tamaño visual (lo que ves en pantalla)
+                canvas.style.width = `${nivelZoom}%`; 
+                canvas.style.height = "auto"; 
+
+                const context = canvas.getContext('2d');
+                // Escalamos el contexto para que coincida con el DPR
+                context.scale(dpr, dpr);
+                
                 contenedorPdf.appendChild(canvas);
                 
-                page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport });
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                page.render(renderContext);
             });
         }
-    }).catch(err => console.error(err));
+    }).catch(err => {
+        console.error(err);
+        contenedorPdf.innerHTML = '<p style="color:red; text-align:center;">Error al cargar el PDF.</p>';
+    });
 }
 
 // --- 7. CERRAR VISOR ---
