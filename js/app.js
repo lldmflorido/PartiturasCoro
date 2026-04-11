@@ -26,7 +26,7 @@ btnToggleSidebar.addEventListener('click', () => {
 });
 
 // --- 2. CARGAR DATOS ---
-fetch('cantos.json?nocache=' + new Date().getTime())
+fetch('cantos.json')
     .then(res => res.json())
     .then(datos => {
         cantos = datos.map(c => {
@@ -41,6 +41,9 @@ fetch('cantos.json?nocache=' + new Date().getTime())
 
         generarMenuTemas(cantos);
         aplicarFiltros();
+        
+        // LLAMADA A LA SINCRONIZACIÓN SILENCIOSA
+        sincronizarPartituras(); 
     })
     .catch(err => console.error("Error al cargar cantos.json", err));
 
@@ -298,8 +301,8 @@ contenedorPdf.addEventListener('touchstart', (e) => {
         
         // Calculamos qué porcentaje de la partitura estamos tocando
         const rect = contenedorPdf.getBoundingClientRect();
-        porcentajeX = (scrollInicialX + (centroInicialX - rect.left)) / contenedorPdf.scrollWidth;
-        porcentajeY = (scrollInicialY + (centroInicialY - rect.top)) / contenedorPdf.scrollHeight;
+        let porcentajeX = (scrollInicialX + (centroInicialX - rect.left)) / contenedorPdf.scrollWidth;
+        let porcentajeY = (scrollInicialY + (centroInicialY - rect.top)) / contenedorPdf.scrollHeight;
     }
 }, { passive: false });
 
@@ -382,4 +385,40 @@ if ('serviceWorker' in navigator) {
             .then(reg => console.log('Service Worker listo', reg.scope))
             .catch(err => console.warn('Error al registrar SW', err));
     });
+}
+// --- 11. MOSTRAR/OCULTAR BARRA CON UN TOQUE ---
+contenedorPdf.addEventListener('click', (e) => {
+    // Solo toggleamos si el usuario no está haciendo zoom con dos dedos
+    // y si no hizo clic por error en un botón (como el de reset)
+    if (!pinchZoomando && e.target.id !== 'btn-reset-zoom') {
+        barraSuperior.classList.toggle('barra-oculta');
+    }
+});
+// --- 12. SINCRONIZACIÓN AUTOMÁTICA EN SEGUNDO PLANO ---
+async function sincronizarPartituras() {
+    // Esperamos 5 segundos antes de empezar para que la app cargue fluida
+    setTimeout(async () => {
+        const nombreCachePdfs = 'COROFLORIDO-PDFS-v1'; // DEBE coincidir con sw.js
+        const cache = await caches.open(nombreCachePdfs);
+        console.log("Iniciando descarga silenciosa de repertorio...");
+
+        for (const canto of cantos) {
+            const url = `Partituras/${canto.archivo}`;
+            
+            // Verificamos si ya existe en la caché antes de intentar bajarlo
+            const coincidencia = await cache.match(url);
+            
+            if (!coincidencia) {
+                try {
+                    await cache.add(url);
+                    console.log(`Guardado offline: ${canto.nombre}`);
+                    // Pausa de 800ms entre cantos para no saturar la red ni la RAM
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                } catch (e) {
+                    console.warn(`Error al precargar: ${canto.nombre}`, e);
+                }
+            }
+        }
+        console.log("Sincronización terminada. Todo el cantoral está disponible.");
+    }, 5000);
 }

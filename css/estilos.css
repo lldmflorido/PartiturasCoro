@@ -176,6 +176,7 @@ body {
     transition: transform 0.3s ease-in-out; z-index: 1000;
     border-bottom: 1px solid #ccc;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease-in-out;
 }
 
 .barra-oculta { transform: translateY(-100%); }
