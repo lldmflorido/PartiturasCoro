@@ -28,23 +28,69 @@ const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
 const sidebar = document.getElementById('sidebar-temas');
 const btnResetZoom = document.getElementById('btn-reset-zoom');
 const btnLimpiarBusqueda = document.getElementById('btn-limpiar-busqueda');
+const contadorDescargas = document.getElementById('contador-descargas');
+const NOMBRE_CACHE_PDFS = 'COROFLORIDO-PDFS-v1';
 
-// --- 1. LÓGICA DE BARRA RETRÁCTIL (INTELIGENTE) ---
+// --- 1. LÓGICA DE BARRA RETRÁCTIL, OVERLAY Y SWIPE ---
 
-// 1A. Auto-ocultar si la pantalla es pequeña (Celulares)
+// Creamos dinámicamente el "escudo" y lo agregamos al documento
+const overlay = document.createElement('div');
+overlay.id = 'overlay-sidebar';
+document.body.appendChild(overlay);
+
+// Función maestra para abrir y cerrar (controla el menú y el escudo)
+function alternarMenu(forzarCierre = false) {
+    if (forzarCierre) {
+        sidebar.classList.add('oculto');
+    } else {
+        sidebar.classList.toggle('oculto');
+    }
+    
+    // Si estamos en celular, controlamos el escudo
+    if (window.innerWidth <= 768 && !sidebar.classList.contains('oculto')) {
+        overlay.classList.add('activo');
+        setTimeout(() => overlay.style.opacity = '1', 10); // Efecto suave
+    } else {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.classList.remove('activo'), 300); // Espera a que acabe el efecto
+    }
+}
+
+// 1A. Auto-ocultar al iniciar si es celular
 if (window.innerWidth <= 768) {
     sidebar.classList.add('oculto');
 }
 
 // 1B. El botón manual
-btnToggleSidebar.addEventListener('click', () => {
-    sidebar.classList.toggle('oculto');
-});
+btnToggleSidebar.addEventListener('click', () => alternarMenu());
+
+// 1C. Si tocas el escudo oscuro, se cierra el menú protegiendo los cantos
+overlay.addEventListener('click', () => alternarMenu(true));
+
+// 1D. Lógica de Swipe (Deslizar para cerrar)
+let toqueInicialX = 0;
+let toqueFinalX = 0;
+
+document.addEventListener('touchstart', e => {
+    toqueInicialX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+    toqueFinalX = e.changedTouches[0].screenX;
+    
+    // Si deslizaste hacia la izquierda por más de 50px
+    if (toqueInicialX - toqueFinalX > 50) {
+        // Solo cerramos si es celular y el menú está abierto
+        if (window.innerWidth <= 768 && !sidebar.classList.contains('oculto')) {
+            alternarMenu(true);
+        }
+    }
+}, { passive: true });
 
 // --- 2. CARGAR DATOS ---
 fetch('cantos.json')
     .then(res => res.json())
-    .then(datos => {
+    .then(async datos => {
         cantos = datos.map(c => {
             let arrTemas = [];
             if (Array.isArray(c.temas)) {
@@ -58,7 +104,7 @@ fetch('cantos.json')
         generarMenuTemas(cantos);
         aplicarFiltros();
         
-        // LLAMADA A LA SINCRONIZACIÓN SILENCIOSA
+        await actualizarContadorDescargas(); 
         sincronizarPartituras(); 
     })
     .catch(err => console.error("Error al cargar cantos.json", err));
@@ -88,8 +134,8 @@ function generarMenuTemas(lista) {
             temaActual = e.target.getAttribute('data-tema');
             aplicarFiltros();
             
-            if(window.innerWidth < 768) {
-                sidebar.classList.add('oculto');
+            if(window.innerWidth <= 768) {
+                alternarMenu(true); // Llama a nuestra nueva función maestra
             }
         });
     });
@@ -454,30 +500,49 @@ contenedorPdf.addEventListener('click', (e) => {
     }
 });
 // --- 12. SINCRONIZACIÓN AUTOMÁTICA EN SEGUNDO PLANO ---
+async function actualizarContadorDescargas() {
+    if (!('caches' in window) || cantos.length === 0) return;
+    
+    try {
+        const cache = await caches.open(NOMBRE_CACHE_PDFS);
+        const requestsGuardados = await cache.keys();
+        const urlsGuardadas = requestsGuardados.map(req => decodeURIComponent(new URL(req.url).pathname.split('/').pop()));
+        
+        let descargados = cantos.filter(c => urlsGuardadas.includes(c.archivo)).length;
+        let total = cantos.length;
+        
+        contadorDescargas.style.display = 'inline-block';
+        
+        if (descargados >= total) {
+            contadorDescargas.textContent = `✓ Disponibles sin internet`;
+            contadorDescargas.classList.add('completado');
+        } else {
+            contadorDescargas.textContent = `Guardando en tu dispositivo: ${descargados} de ${total}`;
+            contadorDescargas.classList.remove('completado');
+        }
+    } catch(e) {
+        console.warn("Error al leer caché para el contador", e);
+    }
+}
+
 async function sincronizarPartituras() {
-    // Esperamos 5 segundos antes de empezar para que la app cargue fluida
     setTimeout(async () => {
-        const nombreCachePdfs = 'COROFLORIDO-PDFS-v1'; // DEBE coincidir con sw.js
-        const cache = await caches.open(nombreCachePdfs);
-        console.log("Iniciando descarga silenciosa de repertorio...");
+        const cache = await caches.open(NOMBRE_CACHE_PDFS);
 
         for (const canto of cantos) {
             const url = `Partituras/${canto.archivo}`;
-            
-            // Verificamos si ya existe en la caché antes de intentar bajarlo
             const coincidencia = await cache.match(url);
             
             if (!coincidencia) {
                 try {
                     await cache.add(url);
-                    console.log(`Guardado offline: ${canto.nombre}`);
-                    // Pausa de 800ms entre cantos para no saturar la red ni la RAM
-                    await new Promise(resolve => setTimeout(resolve, 800));
+                    await actualizarContadorDescargas(); 
+                    await new Promise(resolve => setTimeout(resolve, 300));
                 } catch (e) {
                     console.warn(`Error al precargar: ${canto.nombre}`, e);
                 }
             }
         }
-        console.log("Sincronización terminada. Todo el cantoral está disponible.");
-    }, 5000);
+        await actualizarContadorDescargas();
+    }, 3000);
 }
