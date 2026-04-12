@@ -263,65 +263,81 @@ function abrirVisor(canto) {
     actualizarZoom(); 
     contenedorPdf.innerHTML = '<p style="margin-top:80px; text-align:center; color:#555;">Cargando partitura en alta resolución...</p>';
 
-    pdfjsLib.getDocument(`Partituras/${canto.archivo}`).promise.then(pdf => {
+pdfjsLib.getDocument(`Partituras/${canto.archivo}`).promise.then(pdf => {
         contenedorPdf.innerHTML = ''; 
         
-        // VARIABLES DE SEGURIDAD EXTREMA PARA TABLETS
         const dpr = window.devicePixelRatio || 1;
-        // 2500 píxeles FÍSICOS totales es un límite súper seguro para evitar crashes
         const LIMITE_FISICO_PIXELES = 2500; 
 
+        // 1. CREAMOS LOS ESPACIOS VACÍOS PARA LAS 15 PÁGINAS (Skeleton)
+        const arregloCanvases = [];
         for (let i = 1; i <= pdf.numPages; i++) {
-            pdf.getPage(i).then(page => {
-                
-                // 1. OBTENEMOS EL TAMAÑO REAL DEL PDF (Sin escala)
-                const viewportRaw = page.getViewport({ scale: 1.0 });
-                
-                // Queremos escala 1.5 para nitidez, PERO revisaremos si la tablet lo soporta
-                let escalaDeseada = 1.5; 
-                
-                // Calculamos el tamaño final real que ocuparía en la RAM de la tablet
-                let dimensionMayorVisual = Math.max(viewportRaw.width, viewportRaw.height);
-                let dimensionFisicaMax = dimensionMayorVisual * escalaDeseada * dpr;
-
-                let escalaFinal = escalaDeseada;
-
-                // EL FRENO DE EMERGENCIA: Si el PDF es gigantesco, bajamos la escala drásticamente
-                if (dimensionFisicaMax > LIMITE_FISICO_PIXELES) {
-                    // Obligamos a que la multiplicación matemática exacta dé como máximo nuestro límite
-                    escalaFinal = (LIMITE_FISICO_PIXELES / dpr) / dimensionMayorVisual;
-                    console.warn(`Partitura colosal detectada. Reduciendo escala a ${escalaFinal.toFixed(2)} para salvar la memoria de la tablet.`);
-                }
-
-                // 3. GENERAMOS EL VIEWPORT CON LA ESCALA CORRECTA
-                const viewport = page.getViewport({ scale: escalaFinal }); 
-
-                const canvas = document.createElement('canvas');
-                canvas.className = 'pdf-page';
-                
-                // 4. TAMAÑO INTERNO DEL CANVAS (Nitidez / DPR)
-                canvas.width = viewport.width * dpr;
-                canvas.height = viewport.height * dpr;
-
-                // 5. TAMAÑO VISUAL (El CSS se encarga de que quepa en pantalla)
-                canvas.style.width = `${nivelZoom}%`; 
-                canvas.style.height = "auto"; 
-
-                const context = canvas.getContext('2d');
-                
-                // Escalamos el contexto para que coincida con el DPR
-                context.scale(dpr, dpr);
-                
-                contenedorPdf.appendChild(canvas);
-                
-                const renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-                
-                page.render(renderContext);
-            });
+            const canvas = document.createElement('canvas');
+            canvas.className = 'pdf-page';
+            // Le damos una altura promedio para que la barra de scroll exista desde el principio
+            canvas.style.minHeight = "800px"; 
+            canvas.style.width = `${nivelZoom}%`;
+            
+            // Guardamos datos secretos en el canvas para saber qué página es
+            canvas.dataset.pagina = i;
+            canvas.dataset.renderizado = "false"; 
+            
+            contenedorPdf.appendChild(canvas);
+            arregloCanvases.push(canvas);
         }
+
+        // 2. CREAMOS EL "VIGILANTE" (Intersection Observer)
+        const observador = new IntersectionObserver((entradas, obs) => {
+            entradas.forEach(entrada => {
+                // Si el canvas se está acercando a la pantalla...
+                if (entrada.isIntersecting) {
+                    const canvas = entrada.target;
+                    const numPagina = parseInt(canvas.dataset.pagina);
+
+                    // Si ya se dibujó antes, no hacemos nada
+                    if (canvas.dataset.renderizado === "true") return;
+
+                    // Lo marcamos y le decimos al vigilante que ya no lo siga
+                    canvas.dataset.renderizado = "true";
+                    obs.unobserve(canvas);
+
+                    // 3. AHORA SÍ, RENDERIZAMOS ESTA HOJA ESPECÍFICA
+                    pdf.getPage(numPagina).then(page => {
+                        const viewportRaw = page.getViewport({ scale: 1.0 });
+                        let escalaFinal = 1.5; 
+                        let dimensionMayorVisual = Math.max(viewportRaw.width, viewportRaw.height);
+
+                        if ((dimensionMayorVisual * escalaFinal * dpr) > LIMITE_FISICO_PIXELES) {
+                            escalaFinal = (LIMITE_FISICO_PIXELES / dpr) / dimensionMayorVisual;
+                        }
+
+                        const viewport = page.getViewport({ scale: escalaFinal }); 
+
+                        canvas.width = viewport.width * dpr;
+                        canvas.height = viewport.height * dpr;
+                        canvas.style.height = "auto"; 
+                        canvas.style.minHeight = "auto"; // Quitamos la altura falsa
+
+                        const context = canvas.getContext('2d');
+                        context.scale(dpr, dpr);
+                        
+                        page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
+                            page.cleanup(); // Liberamos la memoria interna de pdf.js
+                        });
+                    });
+                }
+            });
+        }, {
+            root: contenedorPdf,
+            // LA MAGIA: El vigilante avisa cuando el canvas está a 1200px de entrar a la pantalla
+            // (Aproximadamente 1 página y media de anticipación)
+            rootMargin: '1200px 0px', 
+            threshold: 0.01
+        });
+
+        // 4. PONEMOS AL VIGILANTE A OBSERVAR TODOS LOS ESPACIOS VACÍOS
+        arregloCanvases.forEach(canvas => observador.observe(canvas));
+
     }).catch(err => {
         console.error(err);
         contenedorPdf.innerHTML = '<p style="color:red; text-align:center;">Error al cargar el PDF.</p>';
@@ -333,15 +349,15 @@ function cerrarVisorCompleto() {
     document.getElementById('vista-visor').style.display = 'none';
     document.getElementById('vista-menu').style.display = 'flex';
     
-    // LIMPIEZA ACTIVA DE MEMORIA
+    // LIMPIEZA ACTIVA DE MEMORIA RAM
     const canvases = contenedorPdf.querySelectorAll('canvas');
     canvases.forEach(canvas => {
         canvas.width = 0;
         canvas.height = 0;
         canvas.remove();
     });
+    
     contenedorPdf.innerHTML = ''; 
-    cantoActualVisualizado = null; // Limpiamos la variable de descarga
 }
 
 // Evento 1: Clic en la "X" de la interfaz

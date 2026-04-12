@@ -1,4 +1,4 @@
-const CACHE_SISTEMA = 'COROFLORIDO-v17'; // Cambia esto para actualizar diseño/lógica
+const CACHE_SISTEMA = 'COROFLORIDO-v18'; // Cambia esto para actualizar diseño/lógica
 const CACHE_PARTITURAS = 'COROFLORIDO-PDFS-v1'; // Solo cambia si hay un cambio masivo de archivos
 
 const ARCHIVOS_BASE = [
