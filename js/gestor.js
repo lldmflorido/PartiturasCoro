@@ -1,6 +1,7 @@
 // --- CONFIGURACIÓN INTEGRADA ---
 const PROPIETARIO = "lldmflorido"; 
 const REPOSITORIO = "PartiturasCoro";
+const URL_BRIDGE_DRIVE = "https://script.google.com/macros/s/AKfycbx6vT6DYYth2mDXw5W2GLquK-HOmbCYZE2TRoAbjRmBibnWFv4lV-mgPh_hFLJ4i-NzOA/exec";
 
 // --- ESTADO DEL SISTEMA ---
 let tokenActual = "";
@@ -34,6 +35,7 @@ const tituloForm = document.getElementById('titulo-modal');
 const utf8_to_b64 = str => window.btoa(unescape(encodeURIComponent(str)));
 const b64_to_utf8 = str => decodeURIComponent(escape(window.atob(str)));
 const obtenerFechaActual = () => new Date().toISOString().split('T')[0];
+
 
 function mostrarMensajeLogin(texto) {
     const msg = document.getElementById('mensaje-login');
@@ -337,7 +339,25 @@ btnSincronizar.addEventListener('click', async () => {
                 });
 
                 if (!resPdf.ok) throw new Error(`Fallo al subir el archivo: ${cambio.nombreArchivoFinal}`);
-            }
+
+                // --- INICIO: NUEVO CÓDIGO DE RESPALDO EN DRIVE ---
+                textoCarga.textContent = `Respaldando en Drive: ${cambio.nombreArchivoFinal}...`;
+                try {
+                    await fetch(URL_BRIDGE_DRIVE, {
+                        method: "POST",
+                        mode: "no-cors", 
+                        body: JSON.stringify({
+                            nombre: cambio.nombreArchivoFinal,
+                            archivoB64: cambio.archivoB64 
+                        })
+                    });
+                    console.log(`Sincronización con Drive enviada: ${cambio.nombreArchivoFinal}`);
+                } catch (e) {
+                    console.warn(`No se pudo respaldar en Drive: ${cambio.nombreArchivoFinal}`);
+                }
+                // --- FIN: NUEVO CÓDIGO DE RESPALDO EN DRIVE ---
+
+            } // <-- Cierre correcto del bloque if
 
             // Nota de Seguridad: Para los ELIMINAR, dejamos el archivo físico huérfano en el repositorio. 
             // Solo lo eliminamos del cantos.json para evitar desastres si borran el canto equivocado.
@@ -345,7 +365,6 @@ btnSincronizar.addEventListener('click', async () => {
             completados++;
             barraProgreso.style.width = `${(completados / (cambiosPendientes.length + 1)) * 100}%`;
         }
-
         // 2. CONSTRUIR Y SUBIR EL JSON FINAL
         textoCarga.textContent = "Actualizando el índice general...";
         
