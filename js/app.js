@@ -27,6 +27,7 @@ const barraSuperior = document.getElementById('barra-superior');
 const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
 const sidebar = document.getElementById('sidebar-temas');
 const btnResetZoom = document.getElementById('btn-reset-zoom');
+const btnLimpiarBusqueda = document.getElementById('btn-limpiar-busqueda');
 
 // --- 1. LÓGICA DE BARRA RETRÁCTIL (INTELIGENTE) ---
 
@@ -155,7 +156,23 @@ function aplicarFiltros() {
     mostrarCantos(filtrados);
 }
 
-inputBuscador.addEventListener('input', aplicarFiltros);
+// PEGA ESTO EN SU LUGAR:
+inputBuscador.addEventListener('input', () => {
+    // Mostrar u ocultar la X dependiendo de si hay texto
+    if (inputBuscador.value.trim() !== '') {
+        btnLimpiarBusqueda.classList.remove('oculto');
+    } else {
+        btnLimpiarBusqueda.classList.add('oculto');
+    }
+    aplicarFiltros();
+});
+
+btnLimpiarBusqueda.addEventListener('click', () => {
+    inputBuscador.value = '';
+    btnLimpiarBusqueda.classList.add('oculto');
+    aplicarFiltros();
+    inputBuscador.focus(); // Regresa el teclado automáticamente
+});
 
 // --- 5. RENDERIZAR LISTA PRINCIPAL ---
 function mostrarCantos(lista) {
@@ -198,62 +215,65 @@ function abrirVisor(canto) {
     actualizarZoom(); 
     contenedorPdf.innerHTML = '<p style="margin-top:80px; text-align:center; color:#555;">Cargando partitura en alta resolución...</p>';
 
-pdfjsLib.getDocument(`Partituras/${canto.archivo}`).promise.then(pdf => {
-    contenedorPdf.innerHTML = ''; 
-    
-    // VARIABLES DE SEGURIDAD
-    const dpr = window.devicePixelRatio || 1;
-    const LIMITE_MEMORIA_PIXELES = 3000; // Un valor seguro para la mayoría de dispositivos
+    pdfjsLib.getDocument(`Partituras/${canto.archivo}`).promise.then(pdf => {
+        contenedorPdf.innerHTML = ''; 
+        
+        // VARIABLES DE SEGURIDAD EXTREMA PARA TABLETS
+        const dpr = window.devicePixelRatio || 1;
+        // 2500 píxeles FÍSICOS totales es un límite súper seguro para evitar crashes
+        const LIMITE_FISICO_PIXELES = 2500; 
 
-    for (let i = 1; i <= pdf.numPages; i++) {
-        pdf.getPage(i).then(page => {
-            
-            // 1. OBTENEMOS EL TAMAÑO REAL DEL PDF (Sin escala)
-            const viewportRaw = page.getViewport({ scale: 1.0 });
-            
-            // 2. CALCULAMOS LA ESCALA INTELIGENTE (Pre-escala)
-            let escalaFinal = 1.5; // Escala nítida predeterminada para todos los cantos
+        for (let i = 1; i <= pdf.numPages; i++) {
+            pdf.getPage(i).then(page => {
+                
+                // 1. OBTENEMOS EL TAMAÑO REAL DEL PDF (Sin escala)
+                const viewportRaw = page.getViewport({ scale: 1.0 });
+                
+                // Queremos escala 1.5 para nitidez, PERO revisaremos si la tablet lo soporta
+                let escalaDeseada = 1.5; 
+                
+                // Calculamos el tamaño final real que ocuparía en la RAM de la tablet
+                let dimensionMayorVisual = Math.max(viewportRaw.width, viewportRaw.height);
+                let dimensionFisicaMax = dimensionMayorVisual * escalaDeseada * dpr;
 
-            // Si el PDF es gigante internamente, bajamos la escala Final
-            if (viewportRaw.width > LIMITE_MEMORIA_PIXELES || viewportRaw.height > LIMITE_MEMORIA_PIXELES) {
-                // Calculamos cuánto debemos reducir para que no pase del límite
-                escalaFinal = LIMITE_MEMORIA_PIXELES / Math.max(viewportRaw.width, viewportRaw.height);
-                console.warn(`Pre-escalando canto gigante "${canto.nombre}" a ${escalaFinal.toFixed(2)} para estabilidad.`);
-            }
+                let escalaFinal = escalaDeseada;
 
-            // 3. GENERAMOS EL VIEWPORT CON LA ESCALA CORRECTA
-            const viewport = page.getViewport({ scale: escalaFinal }); 
+                // EL FRENO DE EMERGENCIA: Si el PDF es gigantesco, bajamos la escala drásticamente
+                if (dimensionFisicaMax > LIMITE_FISICO_PIXELES) {
+                    // Obligamos a que la multiplicación matemática exacta dé como máximo nuestro límite
+                    escalaFinal = (LIMITE_FISICO_PIXELES / dpr) / dimensionMayorVisual;
+                    console.warn(`Partitura colosal detectada. Reduciendo escala a ${escalaFinal.toFixed(2)} para salvar la memoria de la tablet.`);
+                }
 
-            const canvas = document.createElement('canvas');
-            canvas.className = 'pdf-page';
-            
-            // 4. TAMAÑO INTERNO DEL CANVAS (Nitidez / DPR)
-            canvas.width = viewport.width * dpr;
-            canvas.height = viewport.height * dpr;
+                // 3. GENERAMOS EL VIEWPORT CON LA ESCALA CORRECTA
+                const viewport = page.getViewport({ scale: escalaFinal }); 
 
-            // Eliminamos el bloque problemático de seguridad que usábamos antes.
-            // Esta nueva lógica de pre-escala es la que garantiza la estabilidad.
+                const canvas = document.createElement('canvas');
+                canvas.className = 'pdf-page';
+                
+                // 4. TAMAÑO INTERNO DEL CANVAS (Nitidez / DPR)
+                canvas.width = viewport.width * dpr;
+                canvas.height = viewport.height * dpr;
 
-            // 5. TAMAÑO VISUAL (El CSS se encarga de que quepa en pantalla)
-            canvas.style.width = `${nivelZoom}%`; 
-            canvas.style.height = "auto"; 
+                // 5. TAMAÑO VISUAL (El CSS se encarga de que quepa en pantalla)
+                canvas.style.width = `${nivelZoom}%`; 
+                canvas.style.height = "auto"; 
 
-            const context = canvas.getContext('2d');
-            
-            // Escalamos el contexto para que coincida con el DPR
-            context.scale(dpr, dpr);
-            
-            contenedorPdf.appendChild(canvas);
-            
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-                // Nota: Ya no pasamos transformaciones raras, la escala ya es correcta.
-            };
-            
-            page.render(renderContext);
-        });
-    }
+                const context = canvas.getContext('2d');
+                
+                // Escalamos el contexto para que coincida con el DPR
+                context.scale(dpr, dpr);
+                
+                contenedorPdf.appendChild(canvas);
+                
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                page.render(renderContext);
+            });
+        }
     }).catch(err => {
         console.error(err);
         contenedorPdf.innerHTML = '<p style="color:red; text-align:center;">Error al cargar el PDF.</p>';

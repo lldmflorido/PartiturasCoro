@@ -29,7 +29,7 @@
         </aside>
 
         <main class="contenido-derecho">
-            <header class="cabecera-menu">
+<header class="cabecera-menu">
                 <button id="btn-toggle-sidebar" title="Mostrar/Ocultar Menú">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -37,7 +37,16 @@
                         <line x1="3" y1="18" x2="21" y2="18"></line>
                     </svg>
                 </button>
-                <input type="text" id="buscador" placeholder="Buscar canto por título...">
+                
+                <div class="contenedor-buscador">
+                    <input type="text" id="buscador" placeholder="Buscar canto por título...">
+                    <button id="btn-limpiar-busqueda" class="oculto" title="Borrar búsqueda">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
             </header>
             
             <div id="lista-cantos" class="lista-vertical">
