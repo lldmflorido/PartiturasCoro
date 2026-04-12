@@ -28,7 +28,14 @@ const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
 const sidebar = document.getElementById('sidebar-temas');
 const btnResetZoom = document.getElementById('btn-reset-zoom');
 
-// --- 1. LÓGICA DE BARRA RETRÁCTIL ---
+// --- 1. LÓGICA DE BARRA RETRÁCTIL (INTELIGENTE) ---
+
+// 1A. Auto-ocultar si la pantalla es pequeña (Celulares)
+if (window.innerWidth <= 768) {
+    sidebar.classList.add('oculto');
+}
+
+// 1B. El botón manual
 btnToggleSidebar.addEventListener('click', () => {
     sidebar.classList.toggle('oculto');
 });
@@ -191,47 +198,62 @@ function abrirVisor(canto) {
     actualizarZoom(); 
     contenedorPdf.innerHTML = '<p style="margin-top:80px; text-align:center; color:#555;">Cargando partitura en alta resolución...</p>';
 
-    pdfjsLib.getDocument(`Partituras/${canto.archivo}`).promise.then(pdf => {
-        contenedorPdf.innerHTML = ''; 
-        
-        for (let i = 1; i <= pdf.numPages; i++) {
-            pdf.getPage(i).then(page => {
-                // MAGIA PARA LA NITIDEZ:
-                // Detectamos la calidad de la pantalla (Retina/4K suelen ser 2 o 3)
-                const dpr = window.devicePixelRatio || 1;
-                const escalaBase = 1.5; 
-                const viewport = page.getViewport({ scale: escalaBase }); 
+pdfjsLib.getDocument(`Partituras/${canto.archivo}`).promise.then(pdf => {
+    contenedorPdf.innerHTML = ''; 
+    
+    // VARIABLES DE SEGURIDAD
+    const dpr = window.devicePixelRatio || 1;
+    const LIMITE_MEMORIA_PIXELES = 3000; // Un valor seguro para la mayoría de dispositivos
 
-                const canvas = document.createElement('canvas');
-                canvas.className = 'pdf-page';
-                
-                // Ajustamos el tamaño interno del canvas (pixeles reales)
-                canvas.width = viewport.width * dpr;
-                canvas.height = viewport.height * dpr;
-		// IMPORTANTE: Limita el tamaño máximo para evitar crashes en dispositivos viejos
-		if (canvas.width > 4096 || canvas.height > 4096) {
-    			const reduccion = 4096 / Math.max(canvas.width, canvas.height);
-    			canvas.width *= reduccion;
-    			canvas.height *= reduccion;
-		}
-                // Ajustamos el tamaño visual (lo que ves en pantalla)
-                canvas.style.width = `${nivelZoom}%`; 
-                canvas.style.height = "auto"; 
+    for (let i = 1; i <= pdf.numPages; i++) {
+        pdf.getPage(i).then(page => {
+            
+            // 1. OBTENEMOS EL TAMAÑO REAL DEL PDF (Sin escala)
+            const viewportRaw = page.getViewport({ scale: 1.0 });
+            
+            // 2. CALCULAMOS LA ESCALA INTELIGENTE (Pre-escala)
+            let escalaFinal = 1.5; // Escala nítida predeterminada para todos los cantos
 
-                const context = canvas.getContext('2d');
-                // Escalamos el contexto para que coincida con el DPR
-                context.scale(dpr, dpr);
-                
-                contenedorPdf.appendChild(canvas);
-                
-                const renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-                
-                page.render(renderContext);
-            });
-        }
+            // Si el PDF es gigante internamente, bajamos la escala Final
+            if (viewportRaw.width > LIMITE_MEMORIA_PIXELES || viewportRaw.height > LIMITE_MEMORIA_PIXELES) {
+                // Calculamos cuánto debemos reducir para que no pase del límite
+                escalaFinal = LIMITE_MEMORIA_PIXELES / Math.max(viewportRaw.width, viewportRaw.height);
+                console.warn(`Pre-escalando canto gigante "${canto.nombre}" a ${escalaFinal.toFixed(2)} para estabilidad.`);
+            }
+
+            // 3. GENERAMOS EL VIEWPORT CON LA ESCALA CORRECTA
+            const viewport = page.getViewport({ scale: escalaFinal }); 
+
+            const canvas = document.createElement('canvas');
+            canvas.className = 'pdf-page';
+            
+            // 4. TAMAÑO INTERNO DEL CANVAS (Nitidez / DPR)
+            canvas.width = viewport.width * dpr;
+            canvas.height = viewport.height * dpr;
+
+            // Eliminamos el bloque problemático de seguridad que usábamos antes.
+            // Esta nueva lógica de pre-escala es la que garantiza la estabilidad.
+
+            // 5. TAMAÑO VISUAL (El CSS se encarga de que quepa en pantalla)
+            canvas.style.width = `${nivelZoom}%`; 
+            canvas.style.height = "auto"; 
+
+            const context = canvas.getContext('2d');
+            
+            // Escalamos el contexto para que coincida con el DPR
+            context.scale(dpr, dpr);
+            
+            contenedorPdf.appendChild(canvas);
+            
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+                // Nota: Ya no pasamos transformaciones raras, la escala ya es correcta.
+            };
+            
+            page.render(renderContext);
+        });
+    }
     }).catch(err => {
         console.error(err);
         contenedorPdf.innerHTML = '<p style="color:red; text-align:center;">Error al cargar el PDF.</p>';

@@ -14,6 +14,16 @@ body {
     overflow: hidden; /* Evita scroll en toda la página, solo en las áreas designadas */
 }
 
+/* --- ADAPTACIÓN PARA CELULARES (DISEÑO RESPONSIVO) --- */
+@media (max-width: 768px) {
+    #sidebar-temas {
+        position: absolute; /* Hace que la barra flote sobre la lista */
+        height: 100vh;
+        z-index: 50; /* La pone por encima del buscador y las tarjetas */
+        box-shadow: 4px 0 15px rgba(0,0,0,0.15); /* Sombra elegante para separarla */
+    }
+}
+
 #sidebar-temas {
     width: 260px;
     background-color: #ffffff;
