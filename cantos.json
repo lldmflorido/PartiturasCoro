@@ -1,10 +1,12 @@
 [
   {
-    "nombre": "A Jesucristo Ven",
+    "nombre": "A Jesucristo Ven Sin Tardar",
     "archivo": "A Jesucristo Ven (Bautismo).pdf",
     "temas": [
-      "Bautismo"
-    ]
+      "Bautismo",
+      "Llamamiento"
+    ],
+    "fecha": "2026-04-12"
   },
   {
     "nombre": "A Jesús loor",
