@@ -211,6 +211,8 @@ function abrirVisor(canto) {
     document.getElementById('titulo-canto').textContent = canto.nombre;
     barraSuperior.classList.remove('barra-oculta');
     
+    history.pushState({ visorAbierto: true }, null, "#visor");
+    
     nivelZoom = 100; 
     actualizarZoom(); 
     contenedorPdf.innerHTML = '<p style="margin-top:80px; text-align:center; color:#555;">Cargando partitura en alta resolución...</p>';
@@ -281,7 +283,7 @@ function abrirVisor(canto) {
 }
 
 // --- 7. CERRAR VISOR ---
-document.getElementById('btn-cerrar').addEventListener('click', () => {
+function cerrarVisorCompleto() {
     document.getElementById('vista-visor').style.display = 'none';
     document.getElementById('vista-menu').style.display = 'flex';
     
@@ -293,6 +295,26 @@ document.getElementById('btn-cerrar').addEventListener('click', () => {
         canvas.remove();
     });
     contenedorPdf.innerHTML = ''; 
+    cantoActualVisualizado = null; // Limpiamos la variable de descarga
+}
+
+// Evento 1: Clic en la "X" de la interfaz
+document.getElementById('btn-cerrar').addEventListener('click', () => {
+    // Si cierran con la X, también damos un paso atrás en el historial 
+    // para que no tengan que presionarlo doble vez después
+    if (window.location.hash === "#visor") {
+        history.back();
+    } else {
+        cerrarVisorCompleto();
+    }
+});
+
+// Evento 2: NUEVO - Interceptar el botón "Atrás" físico o el gesto del celular
+window.addEventListener('popstate', (event) => {
+    // Si el usuario presionó Atrás y salimos del estado '#visor', cerramos el PDF
+    if (document.getElementById('vista-visor').style.display === 'block') {
+        cerrarVisorCompleto();
+    }
 });
 
 // --- 8. LÓGICA DE ZOOM PROFESIONAL ---
