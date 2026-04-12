@@ -541,11 +541,12 @@
   },
   {
     "nombre": "El Que Ha de Venir Vendrá",
-    "archivo": "El Que Ha de Venir Vendrá (Advenimiento-Amanecer).pdf",
+    "archivo": "El Que Ha de Venir Vendrá.pdf",
     "temas": [
       "Advenimiento",
       "Amanecer"
-    ]
+    ],
+    "fecha": "2026-04-12"
   },
   {
     "nombre": "El que Habita al Abrigo de Dios",
