@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administracion del Repertorio</title>
+    <link rel="stylesheet" href="css/gestor.css">
+</head>
+<body>
+
+    <header class="cabecera-gestor">
+        <div class="logo-gestor">
+            <h2>Gestor de Repertorio</h2>
+        </div>
+        <button id="btn-cerrar-sesion" class="btn-secundario oculto">Cerrar Sesion</button>
+    </header>
+
+    <main class="contenedor-principal">
+        
+        <section id="seccion-login" class="panel">
+            <h3>Credenciales de Acceso</h3>
+            <p class="texto-ayuda">Ingrese su llave de autorizacion para continuar. Solo se pedira una vez.</p>
+            <div class="grupo-formulario">
+                <label for="input-token">Llave de Acceso (Token)</label>
+                <input type="password" id="input-token" placeholder="Pegue la clave alfanumerica aqui">
+            </div>
+            <button id="btn-acceder" class="btn-primario">Verificar y Acceder</button>
+            <div id="mensaje-login" class="mensaje-estado"></div>
+        </section>
+
+        <section id="seccion-trabajo" class="oculto">
+            
+            <div class="panel-controles">
+                <button id="btn-nuevo-canto" class="btn-primario">Anadir Nuevo Canto</button>
+                <button id="btn-recargar" class="btn-secundario">Actualizar Lista</button>
+            </div>
+
+            <div class="layout-edicion">
+                <div class="panel panel-lista">
+                    <h3>Cantos Existentes</h3>
+                    <div class="grupo-formulario">
+                        <input type="text" id="buscador-gestor" placeholder="Buscar canto a editar...">
+                    </div>
+                    <ul id="lista-cantos-gestor" class="lista-seleccion">
+                        </ul>
+                </div>
+
+                <div class="panel panel-formulario">
+                    <h3 id="titulo-formulario">Seleccione un canto</h3>
+                    
+                    <form id="formulario-canto" class="oculto" onsubmit="return false;">
+                        <input type="hidden" id="indice-canto">
+                        
+                        <div class="grupo-formulario">
+                            <label for="nombre-canto">Titulo del Canto</label>
+                            <input type="text" id="nombre-canto" required>
+                        </div>
+
+                        <div class="grupo-formulario">
+                            <label for="temas-canto">Temas (separados por coma)</label>
+                            <input type="text" id="temas-canto" required>
+                        </div>
+
+                        <div class="grupo-formulario">
+                            <label>Partitura (PDF)</label>
+                            <div class="caja-archivo">
+                                <input type="file" id="archivo-pdf" accept=".pdf">
+                                <p id="texto-archivo-actual" class="texto-ayuda"></p>
+                                <button id="btn-descargar-actual" class="btn-secundario oculto" type="button">Descargar Partitura Actual</button>
+                            </div>
+                        </div>
+
+                        <div id="estado-guardado" class="mensaje-estado"></div>
+                        
+                        <button id="btn-guardar" class="btn-primario" type="button">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="js/gestor.js"></script>
+</body>
+</html>
