@@ -12,74 +12,107 @@
         <div class="logo-gestor">
             <h2>Gestor de Repertorio</h2>
         </div>
-        <button id="btn-cerrar-sesion" class="btn-secundario oculto">Cerrar Sesion</button>
+        <div class="controles-cabecera oculto" id="controles-cabecera">
+            <span id="contador-cambios" class="badge-cambios">0 Cambios Pendientes</span>
+            <button id="btn-sincronizar" class="btn-sincronizar" disabled>Enviar al Servidor</button>
+            <button id="btn-cerrar-sesion" class="btn-secundario">Cerrar Sesion</button>
+        </div>
     </header>
 
     <main class="contenedor-principal">
         
-        <section id="seccion-login" class="panel">
+        <section id="seccion-login" class="panel contenedor-centrado">
             <h3>Credenciales de Acceso</h3>
-            <p class="texto-ayuda">Ingrese su llave de autorizacion para continuar. Solo se pedira una vez.</p>
+            <p class="texto-ayuda">Ingrese su llave de autorizacion para continuar.</p>
             <div class="grupo-formulario">
-                <label for="input-token">Llave de Acceso (Token)</label>
-                <input type="password" id="input-token" placeholder="Pegue la clave alfanumerica aqui">
+                <input type="password" id="input-token" placeholder="Llave de Acceso (Token)">
             </div>
             <button id="btn-acceder" class="btn-primario">Verificar y Acceder</button>
             <div id="mensaje-login" class="mensaje-estado"></div>
         </section>
 
         <section id="seccion-trabajo" class="oculto">
-            
-            <div class="panel-controles">
-                <button id="btn-nuevo-canto" class="btn-primario">Anadir Nuevo Canto</button>
-                <button id="btn-recargar" class="btn-secundario">Actualizar Lista</button>
+            <div class="barra-herramientas">
+                <input type="text" id="buscador-gestor" placeholder="Buscar canto por nombre o tema...">
+                <button id="btn-nuevo-canto" class="btn-primario">Agregar Nuevo Canto</button>
             </div>
 
-            <div class="layout-edicion">
-                <div class="panel panel-lista">
-                    <h3>Cantos Existentes</h3>
-                    <div class="grupo-formulario">
-                        <input type="text" id="buscador-gestor" placeholder="Buscar canto a editar...">
-                    </div>
-                    <ul id="lista-cantos-gestor" class="lista-seleccion">
-                        </ul>
-                </div>
-
-                <div class="panel panel-formulario">
-                    <h3 id="titulo-formulario">Seleccione un canto</h3>
-                    
-                    <form id="formulario-canto" class="oculto" onsubmit="return false;">
-                        <input type="hidden" id="indice-canto">
-                        
-                        <div class="grupo-formulario">
-                            <label for="nombre-canto">Titulo del Canto</label>
-                            <input type="text" id="nombre-canto" required>
-                        </div>
-
-                        <div class="grupo-formulario">
-                            <label for="temas-canto">Temas (separados por coma)</label>
-                            <input type="text" id="temas-canto" required>
-                        </div>
-
-                        <div class="grupo-formulario">
-                            <label>Partitura (PDF)</label>
-                            <div class="caja-archivo">
-                                <input type="file" id="archivo-pdf" accept=".pdf">
-                                <p id="texto-archivo-actual" class="texto-ayuda"></p>
-                                <button id="btn-descargar-actual" class="btn-secundario oculto" type="button">Descargar Partitura Actual</button>
-                            </div>
-                        </div>
-
-                        <div id="estado-guardado" class="mensaje-estado"></div>
-                        
-                        <button id="btn-guardar" class="btn-primario" type="button">Guardar Cambios</button>
-                    </form>
-                </div>
+            <div class="panel">
+                <table class="tabla-datos">
+                    <thead>
+                        <tr>
+                            <th>Nombre del Canto</th>
+                            <th>Temas</th>
+                            <th>Fecha Agregado</th>
+                            <th>Archivo PDF</th>
+                            <th class="col-acciones">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-tabla-cantos">
+                        </tbody>
+                </table>
             </div>
-
         </section>
-
     </main>
+
+    <div id="modal-formulario" class="modal-overlay oculto">
+        <div class="modal-contenido">
+            <div class="modal-cabecera">
+                <h3 id="titulo-modal">Registrar Canto</h3>
+                <button class="btn-cerrar-modal" id="btn-cerrar-formulario">X</button>
+            </div>
+            <div class="modal-cuerpo">
+                <input type="hidden" id="indice-canto">
+                
+                <div class="grupo-formulario">
+                    <label for="nombre-canto">Titulo del Canto</label>
+                    <input type="text" id="nombre-canto" required>
+                </div>
+
+                <div class="grupo-formulario">
+                    <label for="temas-canto">Temas (separados por coma)</label>
+                    <input type="text" id="temas-canto" required>
+                </div>
+
+                <div class="grupo-formulario">
+                    <label>Archivo de Partitura (Requerido)</label>
+                    <div class="caja-archivo">
+                        <input type="file" id="archivo-pdf" accept=".pdf">
+                        <p id="texto-archivo-actual" class="texto-ayuda"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-pie">
+                <button class="btn-secundario" id="btn-cancelar-formulario">Cancelar</button>
+                <button class="btn-primario" id="btn-guardar-local">Guardar en Lista</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirmacion" class="modal-overlay oculto">
+        <div class="modal-contenido modal-pequeno">
+            <div class="modal-cabecera">
+                <h3 id="titulo-confirmacion">Atencion</h3>
+            </div>
+            <div class="modal-cuerpo">
+                <p id="texto-confirmacion"></p>
+            </div>
+            <div class="modal-pie">
+                <button class="btn-secundario" id="btn-cancelar-confirmacion">Cancelar</button>
+                <button class="btn-peligro" id="btn-aceptar-confirmacion">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-carga" class="modal-overlay oculto">
+        <div class="modal-contenido modal-pequeno centrado">
+            <h3>Sincronizando con el Servidor</h3>
+            <p id="texto-carga">Por favor no cierre esta ventana. Subiendo archivos...</p>
+            <div class="barra-progreso-contenedor">
+                <div id="barra-progreso" class="barra-progreso-relleno"></div>
+            </div>
+        </div>
+    </div>
 
     <script src="js/gestor.js"></script>
 </body>
