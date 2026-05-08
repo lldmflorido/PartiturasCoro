@@ -125,7 +125,7 @@ window.abrirPDF = function(index) {
     // Configuración específica para v2.0.x
     lib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js';
 
-    visor.innerHTML = '<p style="padding:40px; text-align:center;">Abriendo partitura...</p>';
+    // Descarga binaria (ArrayBuffer)
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'Partituras/' + encodeURIComponent(canto.archivo), true);
     xhr.responseType = 'arraybuffer';
@@ -133,7 +133,7 @@ window.abrirPDF = function(index) {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
                 var data = new Uint8Array(xhr.response);
-                pdfLib.getDocument({data: data}).promise.then(function(pdf) {
+                lib.getDocument({data: data}).promise.then(function(pdf) {
                     visor.innerHTML = "";
                     for (var n = 1; n <= pdf.numPages; n++) {
                         var canvas = document.createElement('canvas');
