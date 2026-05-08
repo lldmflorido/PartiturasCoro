@@ -254,9 +254,10 @@ function mostrarCantos(lista) {
             temasHTML = '<span class="tema-etiqueta" style="opacity:0.4;">Sin tema</span>';
         }
 
+        // Corregido: eliminado gap:6px por falta de soporte en Safari 9
         div.innerHTML = '<div>' +
                             '<h3>' + canto.nombre + '</h3>' +
-                            '<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px;">' +
+                            '<div style="display: flex; flex-wrap: wrap; margin-top: 5px;">' +
                                 temasHTML +
                             '</div>' +
                         '</div>';
