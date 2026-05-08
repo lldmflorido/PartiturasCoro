@@ -157,11 +157,14 @@ window.abrirPDF = function(index) {
 
 function dibujarPagina(pdf, num, canvas) {
     pdf.getPage(num).then(function(page) {
-        var viewport = page.getViewport({ scale: 1.3 });
+        // En PDF.js v1.x, getViewport recibe el número directamente, no un objeto
+        var viewport = page.getViewport(1.3);
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         var ctx = canvas.getContext('2d');
         page.render({ canvasContext: ctx, viewport: viewport });
+    }).catch(function(err) {
+        alert("Error al dibujar página " + num + ": " + err.message);
     });
 }
 
