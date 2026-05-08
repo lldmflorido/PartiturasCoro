@@ -20,7 +20,9 @@ body { background-color: var(--fondo); color: var(--texto); }
 /* CABECERA */
 .cabecera-gestor { background-color: var(--panel); padding: 15px 30px; border-bottom: 2px solid var(--borde); display: flex; justify-content: space-between; align-items: center; }
 .logo-gestor h2 { color: var(--texto); font-size: 20px; border-left: 4px solid var(--dorado); padding-left: 10px; }
-.controles-cabecera { display: flex; align-items: center; gap: 15px; }
+.controles-cabecera { display: flex; align-items: center; }
+.controles-cabecera > * { margin-right: 15px; }
+.controles-cabecera > *:last-child { margin-right: 0; }
 
 /* BADGES Y BOTONES DE ESTADO */
 .badge-cambios { background-color: #fff3cd; color: #856404; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid #ffeeba; }
@@ -61,14 +63,16 @@ body { background-color: var(--fondo); color: var(--texto); }
 /* LAS ETIQUETAS */
 .etiqueta-tema { background: #eee; padding: 3px 8px; border-radius: 10px; font-size: 12px; margin-right: 5px; display: inline-block; }
 /* MODALES (VENTANAS FLOTANTES) */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
 .modal-contenido { background-color: white; width: 100%; max-width: 500px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column; }
 .modal-pequeno { max-width: 400px; }
 .modal-cabecera { background-color: #fafafa; padding: 15px 20px; border-bottom: 1px solid var(--borde); display: flex; justify-content: space-between; align-items: center; }
 .modal-cabecera h3 { margin: 0; font-size: 18px; }
 .btn-cerrar-modal { background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: var(--texto-claro); }
 .modal-cuerpo { padding: 20px; }
-.modal-pie { padding: 15px 20px; border-top: 1px solid var(--borde); display: flex; justify-content: flex-end; gap: 10px; background-color: #fafafa; }
+.modal-pie { padding: 15px 20px; border-top: 1px solid var(--borde); display: flex; justify-content: flex-end; background-color: #fafafa; }
+.modal-pie > * { margin-left: 10px; }
+.modal-pie > *:first-child { margin-left: 0; }
 .centrado { text-align: center; }
 
 /* FORMULARIOS Y BOTONES */
@@ -94,11 +98,17 @@ body { background-color: var(--fondo); color: var(--texto); }
 /* --- DISEÑO RESPONSIVO (MÓVILES Y TABLETS) --- */
 @media (max-width: 768px) {
     /* 1. Ajuste de la cabecera y el buscador */
-    .cabecera-gestor { flex-direction: column; align-items: stretch; gap: 15px; padding: 15px; }
-    .controles-cabecera { flex-direction: column; width: 100%; align-items: stretch; gap: 10px; }
-    .btn-sincronizar, #btn-cerrar-sesion { width: 100%; text-align: center; }
+    .cabecera-gestor { flex-direction: column; align-items: stretch; padding: 15px; }
+    .cabecera-gestor > * { margin-bottom: 15px; }
+    .cabecera-gestor > *:last-child { margin-bottom: 0; }
+
+    .controles-cabecera { flex-direction: column; width: 100%; align-items: stretch; }
+    .controles-cabecera > * { margin-bottom: 10px; margin-right: 0; }
+    .controles-cabecera > *:last-child { margin-bottom: 0; }
     
-    .barra-herramientas { flex-direction: column; gap: 15px; }
+    .barra-herramientas { flex-direction: column; }
+    .barra-herramientas > * { margin-bottom: 15px; }
+    .barra-herramientas > *:last-child { margin-bottom: 0; }
     #buscador-gestor { width: 100%; }
     #btn-nuevo-canto { width: 100%; }
 
@@ -130,11 +140,12 @@ body { background-color: var(--fondo); color: var(--texto); }
     .col-acciones { 
         display: flex; 
         flex-direction: column; 
-        gap: 10px; 
         margin-top: 10px;
         padding-top: 15px;
         border-top: 2px solid var(--fondo);
     }
+    .col-acciones > * { margin-bottom: 10px; }
+    .col-acciones > *:last-child { margin-bottom: 0; }
     
     .btn-accion { 
         width: 100%; 

@@ -1,4 +1,4 @@
-const CACHE_SISTEMA = 'COROFLORIDO-v18'; // Cambia esto para actualizar diseño/lógica
+const CACHE_SISTEMA = 'COROFLORIDO-v19'; // Cambia esto para actualizar diseño/lógica
 const CACHE_PARTITURAS = 'COROFLORIDO-PDFS-v1'; // Solo cambia si hay un cambio masivo de archivos
 
 const ARCHIVOS_BASE = [
@@ -9,8 +9,8 @@ const ARCHIVOS_BASE = [
     './manifest.json',
     './icono.png',
     './cantos.json',
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.min.mjs',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.worker.min.mjs'
 ];
 
 // Instalación: Solo guardamos el "esqueleto" de la app
