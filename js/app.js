@@ -79,31 +79,41 @@ document.addEventListener('touchend', function(e) {
     }
 }, { passive: true });
 
-// --- 2. CARGAR DATOS ---
-fetch('cantos.json')
-    .then(function(res) { return res.json(); })
-    .then(function(datos) {
-        cantos = datos.map(function(c) {
-            var arrTemas = [];
-            if (Array.isArray(c.temas)) {
-                arrTemas = c.temas;
-            } else if (typeof c.tema === 'string' && c.tema.trim() !== '') {
-                arrTemas = [c.tema.trim()]; 
+// --- 2. CARGAR DATOS (Usando XMLHttpRequest para Safari 9) ---
+var xhr = new XMLHttpRequest();
+xhr.open('GET', 'cantos.json', true);
+xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+            try {
+                var datos = JSON.parse(xhr.responseText);
+                cantos = datos.map(function(c) {
+                    var arrTemas = [];
+                    if (Array.isArray(c.temas)) {
+                        arrTemas = c.temas;
+                    } else if (typeof c.tema === 'string' && c.tema.trim() !== '') {
+                        arrTemas = [c.tema.trim()]; 
+                    }
+                    var obj = {};
+                    for (var key in c) { obj[key] = c[key]; }
+                    obj.temas = arrTemas;
+                    return obj;
+                });
+                generarMenuTemas(cantos);
+                aplicarFiltros();
+                actualizarContadorDescargas(); 
+                sincronizarPartituras();
+            } catch (e) {
+                console.error("Error procesando JSON", e);
+                document.getElementById('lista-cantos').innerHTML = '<p style="padding:20px;">Error en el formato de datos.</p>';
             }
-            // ES5 equivalent of object spread
-            var obj = {};
-            for (var key in c) { obj[key] = c[key]; }
-            obj.temas = arrTemas;
-            return obj;
-        });
-
-        generarMenuTemas(cantos);
-        aplicarFiltros();
-        
-        actualizarContadorDescargas(); 
-        sincronizarPartituras(); 
-    })
-    .catch(function(err) { console.error("Error al cargar cantos.json", err); });
+        } else {
+            console.error("Error cargando cantos.json", xhr.status);
+            document.getElementById('lista-cantos').innerHTML = '<p style="padding:20px;">No se pudo cargar la lista (Error: ' + xhr.status + ').</p>';
+        }
+    }
+};
+xhr.send();
 
 // --- 3. GENERAR BARRA LATERAL ---
 function generarMenuTemas(lista) {
