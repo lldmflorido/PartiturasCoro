@@ -116,15 +116,16 @@ window.abrirPDF = function(index) {
     var visor = document.getElementById('contenedor-pdf');
     visor.innerHTML = '<p style="padding:40px; text-align:center;">Descargando partitura...</p>';
 
-    var pdfLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
-    if (!pdfLib) {
-        alert("Librería PDF no cargada.");
+    var lib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+    if (!lib) {
+        alert("La librería PDF no se cargó.");
         return;
     }
 
-    pdfLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js';
+    // Configuración específica para v2.0.x
+    lib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js';
 
-    // Descarga binaria (ArrayBuffer)
+    visor.innerHTML = '<p style="padding:40px; text-align:center;">Abriendo partitura...</p>';
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'Partituras/' + encodeURIComponent(canto.archivo), true);
     xhr.responseType = 'arraybuffer';
