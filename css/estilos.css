@@ -21,6 +21,7 @@ body {
         height: 100vh;
         z-index: 50; /* La pone por encima del buscador y las tarjetas */
         box-shadow: 4px 0 15px rgba(0,0,0,0.15); /* Sombra elegante para separarla */
+        display: none; /* Oculto por defecto en tablets y móviles */
     }
 }
 
@@ -32,7 +33,6 @@ body {
     flex-direction: column;
     padding: 20px 0;
     box-shadow: 2px 0 5px rgba(212, 175, 55, 0.05);
-    /* NUEVO: Transición suave para ocultar/mostrar */
     transition: margin-left 0.3s ease-in-out;
     flex-shrink: 0; 
 }
@@ -98,6 +98,7 @@ body {
     display: flex;
     flex-direction: column;
     background-color: #fcfcfc;
+    overflow: hidden;
 }
 
 /* Cabecera del menú (Ajustada para incluir el botón) */
@@ -184,6 +185,7 @@ body {
     padding: 20px;
     overflow-y: auto;
     flex-grow: 1;
+    -webkit-overflow-scrolling: touch; /* Habilita el scroll fluido en iPad viejo */
 }
 
 .tarjeta-canto {
