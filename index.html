@@ -3,110 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Repertorio local</title>
+    <title>Repertorio</title>
     <link rel="stylesheet" href="css/estilos.css">
-    <link rel="manifest" href="manifest.json">
-
-    <link rel="icon" type="image/png" href="icono.png">
-
-    <link rel="apple-touch-icon" href="icono.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     
-    <meta name="mobile-web-app-capable" content="yes">
-    
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+    <script src="js/es6-shim.min.js"></script>
     <script>
-        // CAPTURADOR DE ERRORES PARA DEPURACIÓN EN IPAD VIEJO
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            var string = msg.toLowerCase();
-            var substring = "script error";
-            if (string.indexOf(substring) > -1){
-                alert('Script Error: Verifique CORS o conectividad');
-            } else {
-                var message = [
-                    'Mensaje: ' + msg,
-                    'URL: ' + url,
-                    'Línea: ' + lineNo,
-                    'Columna: ' + columnNo,
-                    'Error: ' + JSON.stringify(error)
-                ].join('\n');
-                alert(message);
-            }
+        window.onerror = function(msg, url, line) {
+            alert("ERROR CRÍTICO:\n" + msg + "\nEn: " + url + "\nLínea: " + line);
             return false;
         };
     </script>
-
-    <!-- Polyfills para compatibilidad con iPad Mini 1 (iOS 9) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.6/es6-shim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/3.6.20/fetch.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/intersection-observer@0.12.2/intersection-observer.js"></script>
 </head>
 <body>
+    <div id="debug-log" style="position:fixed; bottom:0; width:100%; background:rgba(0,0,0,0.7); color:white; font-size:10px; z-index:9999; height:50px; overflow:auto; pointer-events:none;">
+        Cargando sistema...
+    </div>
 
     <div id="vista-menu" class="layout-principal">
-        
         <aside id="sidebar-temas">
             <div class="logo-sidebar">
-    		<h2>Repertorio</h2>
-    		<div class="contadores-wrapper">
-        		<span id="contador-cantos" class="contador-estilo">...</span>
-        		<span id="contador-descargas" class="contador-estilo-descargas" style="display: none;">...</span>
-    		</div>
-	    </div>
-            <h3>Filtrar por Tema</h3>
-            <ul id="lista-temas">
-                </ul>
+    		    <h2>Repertorio</h2>
+                <span id="contador-cantos" class="contador-estilo">0</span>
+	        </div>
+            <ul id="lista-temas"></ul>
         </aside>
 
         <main class="contenido-derecho">
-<header class="cabecera-menu">
-                <button id="btn-toggle-sidebar" title="Mostrar/Ocultar Menú">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                
-                <div class="contenedor-buscador">
-                    <input type="text" id="buscador" placeholder="Buscar canto por título...">
-                    <button id="btn-limpiar-busqueda" class="oculto" title="Borrar búsqueda">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                </div>
+            <header class="cabecera-menu">
+                <button id="btn-toggle-sidebar" style="padding:10px; background:#D4AF37; color:white; border:none; border-radius:5px;">TEMAS</button>
+                <input type="text" id="buscador" placeholder="Buscar canto..." style="margin-left:10px; flex-grow:1; padding:10px; border:1px solid #ccc; border-radius:5px;">
             </header>
-            
             <div id="lista-cantos" class="lista-vertical">
-                </div>
+                <p style="padding:20px; text-align:center;">Buscando cantos en la base de datos...</p>
+            </div>
         </main>
     </div>
 
-    <div id="vista-visor" style="display: none;">
-        <div id="barra-superior">
-            <button id="btn-cerrar" title="Cerrar">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-            </button>
-            <h2 id="titulo-canto">Nombre del Canto</h2>
-            
-            <button id="btn-reset-zoom" title="Ajustar a la pantalla" style="display: none;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path>
-                    <path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path>
-                </svg>
-            </button>
+    <div id="vista-visor" style="display: none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000;">
+        <div id="barra-superior" style="height:60px; background:#f4f4f4; display:flex; align-items:center; padding:0 15px; border-bottom:1px solid #ccc;">
+            <button id="btn-cerrar" style="padding:10px; background:#666; color:white; border:none; border-radius:5px;">VOLVER</button>
+            <h2 id="titulo-canto" style="margin-left:15px; font-size:16px; flex-grow:1; overflow:hidden; white-space:nowrap;"></h2>
         </div>
-        <div id="contenedor-pdf"></div>
+        <div id="contenedor-pdf" style="height:calc(100% - 60px); overflow:auto; -webkit-overflow-scrolling:touch; background:#eee;"></div>
     </div>
 
-    <!-- PDF.js Legacy (ES5 compatible) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- Carga de librerías locales únicamente -->
+    <script src="js/pdf.min.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

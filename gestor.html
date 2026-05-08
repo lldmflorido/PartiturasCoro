@@ -3,118 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administracion del Repertorio</title>
+    <title>Administracion</title>
     <link rel="stylesheet" href="css/gestor.css">
     
-    <!-- Polyfills para compatibilidad con iPad Mini 1 (iOS 9) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.6/es6-shim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/3.6.20/fetch.min.js"></script>
+    <script src="js/es6-shim.min.js"></script>
+    <script>
+        window.onerror = function(msg, url, line) {
+            alert("ERROR GESTOR:\n" + msg + "\nLínea: " + line);
+            return false;
+        };
+    </script>
 </head>
 <body>
-
     <header class="cabecera-gestor">
-        <div class="logo-gestor">
-            <h2>Gestor de Repertorio</h2>
-        </div>
+        <div class="logo-gestor"><h2>Gestor</h2></div>
         <div class="controles-cabecera oculto" id="controles-cabecera">
-            <span id="contador-cambios" class="badge-cambios">0 Cambios Pendientes</span>
-            <button id="btn-sincronizar" class="btn-sincronizar" disabled>Enviar al Servidor</button>
-            <button id="btn-cerrar-sesion" class="btn-secundario">Cerrar Sesion</button>
+            <span id="contador-cambios" class="badge-cambios">0 Cambios</span>
+            <button id="btn-sincronizar" class="btn-sincronizar" disabled>Sincronizar</button>
+            <button id="btn-cerrar-sesion" class="btn-secundario">Salir</button>
         </div>
     </header>
 
     <main class="contenedor-principal">
-        
         <section id="seccion-login" class="panel contenedor-centrado">
-            <h3>Credenciales de Acceso</h3>
-            <p class="texto-ayuda">Ingrese su llave de autorizacion para continuar.</p>
-            <div class="grupo-formulario">
-                <input type="password" id="input-token" placeholder="Llave de Acceso (Token)">
-            </div>
-            <button id="btn-acceder" class="btn-primario">Verificar y Acceder</button>
-            <div id="mensaje-login" class="mensaje-estado"></div>
+            <h3>Acceso</h3>
+            <input type="password" id="input-token" placeholder="Llave (Token)" style="width:100%; padding:10px; margin:10px 0;">
+            <button id="btn-acceder" class="btn-primario">Entrar</button>
+            <div id="mensaje-login"></div>
         </section>
 
         <section id="seccion-trabajo" class="oculto">
             <div class="barra-herramientas">
-                <input type="text" id="buscador-gestor" placeholder="Buscar canto por nombre o tema...">
-                <button id="btn-nuevo-canto" class="btn-primario">Agregar Nuevo Canto</button>
+                <input type="text" id="buscador-gestor" placeholder="Filtrar...">
+                <button id="btn-nuevo-canto" class="btn-primario">+ Nuevo</button>
             </div>
-
-            <div class="panel">
+            <div class="panel" style="overflow:auto;">
                 <table class="tabla-datos">
-                    <thead>
-                        <tr>
-                            <th>Nombre del Canto</th>
-                            <th>Temas</th>
-                            <th>Fecha Agregado</th>
-                            <th>Archivo PDF</th>
-                            <th class="col-acciones">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpo-tabla-cantos">
-                        </tbody>
+                    <thead><tr><th>Canto</th><th>Acciones</th></tr></thead>
+                    <tbody id="cuerpo-tabla-cantos"></tbody>
                 </table>
             </div>
         </section>
     </main>
 
-    <div id="modal-formulario" class="modal-overlay oculto">
-        <div class="modal-contenido">
-            <div class="modal-cabecera">
-                <h3 id="titulo-modal">Registrar Canto</h3>
-                <button class="btn-cerrar-modal" id="btn-cerrar-formulario">X</button>
-            </div>
-            <div class="modal-cuerpo">
-                <input type="hidden" id="indice-canto">
-                
-                <div class="grupo-formulario">
-                    <label for="nombre-canto">Titulo del Canto</label>
-                    <input type="text" id="nombre-canto" required>
-                </div>
-
-                <div class="grupo-formulario">
-                    <label for="temas-canto">Temas (separados por coma)</label>
-                    <input type="text" id="temas-canto" required>
-                </div>
-
-                <div class="grupo-formulario">
-                    <label>Archivo de Partitura (Requerido)</label>
-                    <div class="caja-archivo">
-                        <input type="file" id="archivo-pdf" accept=".pdf">
-                        <p id="texto-archivo-actual" class="texto-ayuda"></p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-pie">
-                <button class="btn-secundario" id="btn-cancelar-formulario">Cancelar</button>
-                <button class="btn-primario" id="btn-guardar-local">Guardar en Lista</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-confirmacion" class="modal-overlay oculto">
-        <div class="modal-contenido modal-pequeno">
-            <div class="modal-cabecera">
-                <h3 id="titulo-confirmacion">Atencion</h3>
-            </div>
-            <div class="modal-cuerpo">
-                <p id="texto-confirmacion"></p>
-            </div>
-            <div class="modal-pie">
-                <button class="btn-secundario" id="btn-cancelar-confirmacion">Cancelar</button>
-                <button class="btn-peligro" id="btn-aceptar-confirmacion">Confirmar</button>
-            </div>
+    <!-- Modales simplificados para iPad -->
+    <div id="modal-formulario" class="modal-overlay oculto" style="background:rgba(0,0,0,0.8); z-index:1000;">
+        <div class="modal-contenido" style="background:white; padding:20px; margin:20px; border-radius:10px;">
+            <h3 id="titulo-modal">Canto</h3>
+            <input type="hidden" id="indice-canto">
+            <label>Título:</label><br>
+            <input type="text" id="nombre-canto" style="width:100%; padding:8px;"><br><br>
+            <label>Temas (Comas):</label><br>
+            <input type="text" id="temas-canto" style="width:100%; padding:8px;"><br><br>
+            <label>PDF:</label><br>
+            <input type="file" id="archivo-pdf" accept=".pdf"><br><br>
+            <button id="btn-guardar-local" class="btn-primario">Guardar</button>
+            <button id="btn-cerrar-formulario" class="btn-secundario">Cancelar</button>
         </div>
     </div>
 
     <div id="modal-carga" class="modal-overlay oculto">
-        <div class="modal-contenido modal-pequeno centrado">
-            <h3>Sincronizando con el Servidor</h3>
-            <p id="texto-carga">Por favor no cierre esta ventana. Subiendo archivos...</p>
-            <div class="barra-progreso-contenedor">
-                <div id="barra-progreso" class="barra-progreso-relleno"></div>
-            </div>
+        <div class="modal-contenido centrado">
+            <h3>Procesando...</h3>
+            <p id="texto-carga">Subiendo datos...</p>
         </div>
     </div>
 
