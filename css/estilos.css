@@ -31,17 +31,49 @@ body {
     width: 260px;
     background-color: #ffffff;
     border-right: 2px solid #eaeaea;
-    display: flex;
-    flex-direction: column;
-    padding: 20px 0;
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    padding: 40px 0 20px 0;
     box-shadow: 2px 0 5px rgba(212, 175, 55, 0.05);
     transition: margin-left 0.3s ease-in-out;
-    flex-shrink: 0; 
+    z-index: 50;
+    overflow-y: auto;
 }
 
-/* NUEVO: Esta clase oculta la barra hacia la izquierda */
-#sidebar-temas.oculto {
-    margin-left: -260px;
+/* NUEVO: Botón cerrar dentro del sidebar */
+#btn-cerrar-sidebar {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 10px;
+    background: #f4f4f4;
+    border: none;
+    border-radius: 5px;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#btn-toggle-sidebar {
+    background-color: #D4AF37;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#btn-cerrar { 
+    background-color: #666; 
+    border: none; 
+    color: white; 
+    cursor: pointer; 
+    padding: 10px 15px; 
+    border-radius: 8px;
+    font-weight: bold;
 }
 
 .logo-sidebar {
@@ -72,8 +104,7 @@ body {
 
 #lista-temas {
     list-style: none;
-    overflow-y: auto; /* Permite scroll solo en los temas */
-    flex-grow: 1;
+    overflow-y: auto;
 }
 
 .item-tema {
@@ -91,55 +122,41 @@ body {
     background-color: #faf7eb;
     color: #8c732a;
     font-weight: bold;
-    border-left: 4px solid #D4AF37; /* Toque dorado */
+    border-left: 4px solid #D4AF37;
 }
 
 /* CONTENIDO DERECHO (Lista de cantos) */
 .contenido-derecho {
     flex: 1 1 0%;
-    position: relative; /* Cambiado a relative para posicionar hijos sin flex */
+    position: relative;
     background-color: #fcfcfc;
     overflow: hidden;
     height: 100%;
 }
 
-/* Cabecera del menú (Ajustada para incluir el botón) */
+/* Cabecera del menú (Ajustada para incluir el botón y safe zone) */
 .cabecera-menu {
     position: absolute;
     top: 0; left: 0; right: 0;
-    padding: 15px 20px;
-    height: 70px; /* Alto fijo necesario para posicionamiento absoluto */
+    padding: 35px 20px 0 20px;
+    height: 90px;
     box-sizing: border-box;
     background-color: #ffffff;
     border-bottom: 2px solid #eaeaea;
     z-index: 10;
-    display: flex;
-    align-items: center;
 }
 
-.cabecera-menu > * {
-    margin-right: 15px;
-}
-.cabecera-menu > *:last-child {
-    margin-right: 0;
-}
-
-/* NUEVO: Estilo del botón del menú */
 #btn-toggle-sidebar {
-    background: none;
+    float: left;
+    width: 90px;
+    background-color: #D4AF37;
     border: none;
-    color: #D4AF37; /* Dorado */
+    color: white;
     cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 10px 0;
     border-radius: 8px;
-    transition: background 0.2s;
-}
-
-#btn-toggle-sidebar:active {
-    background-color: #f6f1df;
+    font-weight: bold;
+    text-align: center;
 }
 
 /* --- NUEVOS ESTILOS DEL BUSCADOR Y BOTÓN LIMPIAR --- */
@@ -151,9 +168,9 @@ body {
 }
 
 #buscador {
-    width: 100%;
-    padding: 10px 15px; /* Ajustado para el alto de cabecera 70px */
-    padding-right: 50px; /* Deja espacio para que el texto no choque con la X */
+    display: block;
+    margin-left: 105px; /* Espacio para el botón + gap */
+    padding: 10px 15px;
     border-radius: 8px;
     border: 1px solid #e0e0e0;
     background-color: #f5f5f5;
@@ -165,16 +182,14 @@ body {
 #btn-limpiar-busqueda {
     position: absolute;
     right: 8px;
+    top: 50%;
+    margin-top: -15px; /* Centrado manual para compatibilidad */
     background: none;
     border: none;
     color: #a0a0a0;
     cursor: pointer;
-    padding: 10px; /* Área táctil amplia y accesible */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background 0.2s, color 0.2s;
+    padding: 5px;
+    display: none; /* Se activa por JS si hay texto */
 }
 
 #btn-limpiar-busqueda:active {
@@ -189,29 +204,30 @@ body {
 /* NUEVA LISTA VERTICAL SIMPLE */
 .lista-vertical {
     position: absolute;
-    top: 70px; /* Inicia exactamente debajo de la cabecera */
+    top: 90px; /* Ajustado para la nueva altura de cabecera (70+20) */
     bottom: 0; left: 0; right: 0;
     padding: 20px;
-    overflow-y: scroll; /* Forzar scroll en vez de auto */
-    -webkit-overflow-scrolling: touch; /* Habilita el scroll táctil (momentum) en iOS */
-    transform: translate3d(0,0,0); /* Aceleración por hardware para fluidez */
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    transform: translate3d(0,0,0);
 }
 
 .tarjeta-canto {
     background-color: #ffffff;
     padding: 18px 20px;
-    margin-bottom: 10px; /* Separación entre cantos */
+    margin-bottom: 10px;
     border-radius: 8px;
     cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     border: 1px solid #eaeaea;
-    border-left: 5px solid #D4AF37; /* Línea dorada */
+    border-left: 5px solid #D4AF37;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
-.tarjeta-canto h3 { font-size: 17px; color: #222; }
+.tarjeta-canto h3 { font-size: 17px; color: #222; margin-bottom: 8px; }
+
+.contenedor-etiquetas {
+    display: block;
+}
 
 .tema-etiqueta {
     background-color: #f0f0f0;
@@ -219,6 +235,9 @@ body {
     font-size: 12px;
     padding: 4px 10px;
     border-radius: 12px;
+    display: inline-block;
+    margin-right: 5px;
+    margin-top: 5px;
 }
 
 /* --- VISTA VISOR --- */
@@ -228,77 +247,49 @@ body {
 }
 
 #barra-superior {
-    position: absolute; top: 0; left: 0; width: 100%; height: 60px;
-    background-color: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    display: flex; align-items: center; padding: 0 15px;
-    transition: transform 0.3s ease-in-out; z-index: 1000;
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 80px;
+    background-color: #ffffff;
+    padding: 35px 15px 0 15px;
+    box-sizing: border-box;
+    z-index: 1000;
     border-bottom: 1px solid #ccc;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease-in-out;
+}
+
+#btn-cerrar { 
+    float: left;
+    width: 90px;
+    background-color: #666; 
+    border: none; 
+    color: white; 
+    cursor: pointer; 
+    padding: 10px 0; 
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
 }
 
 .barra-oculta { transform: translateY(-100%); }
 
-#btn-cerrar { background: none; border: none; color: #D4AF37; cursor: pointer; padding: 10px; display: flex; align-items: center; justify-content: center; }
-
-#titulo-canto { flex-grow: 1; text-align: center; font-size: 18px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
-
-#btn-reset-zoom {
-    background-color: rgba(212, 175, 55, 0.1); /* Fondo dorado transparente */
-    border: 1px solid #D4AF37;
-    color: #D4AF37;
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 10px;
-    transition: all 0.2s;
-}
-
-#btn-reset-zoom:active {
-    background-color: #D4AF37;
-    color: white;
-}
-
-/* Asegura que la vista ocupe TODA la pantalla sin moverse */
-#vista-visor {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: #000;
-    z-index: 1000;
-    overflow: hidden; /* Evita que el fondo de la lista se mueva */
-    display: none; /* Se activa por JS */
-}
-
-/* El fondo principal de la vista del visor */
-#vista-visor {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: #ffffff; /* Ahora es blanco */
-    z-index: 1000;
-    overflow: hidden;
-    display: none;
+#titulo-canto { 
+    display: block;
+    margin-left: 105px;
+    text-align: left; 
+    font-size: 18px; 
+    color: #333; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap;
+    line-height: 38px;
 }
 
 #contenedor-pdf {
     width: 100%;
     height: 100vh;
-    overflow: auto; /* Activa scroll vertical y horizontal */
-    display: flex; /* Usamos flex para el centrado inicial */
-    flex-direction: column;
-    align-items: center; /* Centra por defecto */
+    overflow: auto;
     background-color: #f4f4f4;
     -webkit-overflow-scrolling: touch;
-    padding-top: 70px;
+    padding-top: 80px; /* Ajustado a la altura de la barra superior */
     box-sizing: border-box;
 }
 

@@ -1,14 +1,3 @@
-// MENSAJE DE CONTROL
-var logUI = document.getElementById('debug-log');
-function log(txt) { 
-    if(logUI) {
-        logUI.innerHTML += "<br>> " + txt;
-        logUI.scrollTop = logUI.scrollHeight;
-    }
-}
-
-log("Iniciando app.js (v. Final)...");
-
 // VARIABLES GLOBALES
 var cantos = [];
 var temaActual = 'Todos';
@@ -17,26 +6,21 @@ var temaActual = 'Todos';
 var contenedorLista = document.getElementById('lista-cantos');
 var listaTemas = document.getElementById('lista-temas');
 var buscador = document.getElementById('buscador');
+var sidebar = document.getElementById('sidebar-temas');
+var overlay = document.getElementById('overlay-sidebar');
 
 // 1. CARGA DE DATOS (XHR TRADICIONAL)
 function cargarDatos() {
-    log("Cargando cantos.json...");
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'cantos.json', true);
     xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            log("Respuesta recibida: " + xhr.status);
-            if (xhr.status === 200) {
-                try {
-                    cantos = JSON.parse(xhr.responseText);
-                    log("JSON cargado: " + cantos.length + " cantos.");
-                    renderizarMenu();
-                    renderizarCantos();
-                } catch (e) {
-                    log("ERROR JSON: " + e.message);
-                }
-            } else {
-                log("ERROR XHR: " + xhr.status);
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+                cantos = JSON.parse(xhr.responseText);
+                renderizarMenu();
+                renderizarCantos();
+            } catch (e) {
+                console.error("Error al parsear JSON", e);
             }
         }
     };
@@ -67,10 +51,8 @@ window.filtrarTema = function(t) {
     temaActual = t;
     renderizarMenu();
     renderizarCantos();
-    // Cerrar menú en móviles tras seleccionar
-    if (window.innerWidth <= 768) {
-        document.getElementById('sidebar-temas').style.display = 'none';
-    }
+    // Cerrar menú tras seleccionar
+    cerrarSidebar();
 };
 
 // 3. RENDERIZADO DE CANTOS
@@ -88,8 +70,14 @@ function renderizarCantos() {
         var coincideTema = (temaActual === "Todos" || cTemas.indexOf(temaActual) !== -1);
 
         if (coincideTexto && coincideTema) {
+            var etiquetasHTML = "";
+            for (var j = 0; j < cTemas.length; j++) {
+                etiquetasHTML += '<span class="tema-etiqueta">' + cTemas[j] + '</span> ';
+            }
+
             html += '<div class="tarjeta-canto" onclick="abrirPDF(' + i + ')">' +
                         '<h3>' + c.nombre + '</h3>' +
+                        '<div class="contenedor-etiquetas">' + etiquetasHTML + '</div>' +
                     '</div>';
             total++;
         }
@@ -107,12 +95,25 @@ if (buscador) {
 }
 
 // 4. VISOR DE PDF
+function setViewportZoom(enabled) {
+    var meta = document.querySelector('meta[name="viewport"]');
+    if (meta) {
+        if (enabled) {
+            meta.content = "width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes";
+        } else {
+            meta.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+        }
+    }
+}
+
 window.abrirPDF = function(index) {
     var canto = cantos[index];
     document.getElementById('vista-menu').style.display = 'none';
     document.getElementById('vista-visor').style.display = 'block';
     document.getElementById('titulo-canto').innerHTML = canto.nombre;
     
+    setViewportZoom(true);
+
     var visor = document.getElementById('contenedor-pdf');
     visor.innerHTML = '<p style="padding:40px; text-align:center;">Descargando partitura...</p>';
 
@@ -122,34 +123,28 @@ window.abrirPDF = function(index) {
         return;
     }
 
-    // Configuración específica para v1.x y v2.x
     lib.workerSrc = 'js/pdf.worker.min.js';
     if (lib.GlobalWorkerOptions) lib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.min.js';
 
-    // Descarga binaria (ArrayBuffer)
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'Partituras/' + encodeURIComponent(canto.archivo), true);
     xhr.responseType = 'arraybuffer';
     xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                var data = new Uint8Array(xhr.response);
-                lib.getDocument({data: data}).promise.then(function(pdf) {
-                    visor.innerHTML = "";
-                    for (var n = 1; n <= pdf.numPages; n++) {
-                        var canvas = document.createElement('canvas');
-                        canvas.className = 'pdf-page';
-                        canvas.style.width = '100%';
-                        canvas.style.marginBottom = '10px';
-                        visor.appendChild(canvas);
-                        dibujarPagina(pdf, n, canvas);
-                    }
-                }).catch(function(err) {
-                    alert("Error PDF: " + err.message);
-                });
-            } else {
-                alert("No se pudo obtener el PDF (Status: " + xhr.status + ")");
-            }
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var data = new Uint8Array(xhr.response);
+            lib.getDocument({data: data}).promise.then(function(pdf) {
+                visor.innerHTML = "";
+                for (var n = 1; n <= pdf.numPages; n++) {
+                    var canvas = document.createElement('canvas');
+                    canvas.className = 'pdf-page';
+                    canvas.style.width = '100%';
+                    canvas.style.marginBottom = '10px';
+                    visor.appendChild(canvas);
+                    dibujarPagina(pdf, n, canvas);
+                }
+            }).catch(function(err) {
+                alert("Error PDF: " + err.message);
+            });
         }
     };
     xhr.send();
@@ -157,27 +152,49 @@ window.abrirPDF = function(index) {
 
 function dibujarPagina(pdf, num, canvas) {
     pdf.getPage(num).then(function(page) {
-        // En PDF.js v1.x, getViewport recibe el número directamente, no un objeto
         var viewport = page.getViewport(1.3);
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         var ctx = canvas.getContext('2d');
         page.render({ canvasContext: ctx, viewport: viewport });
-    }).catch(function(err) {
-        alert("Error al dibujar página " + num + ": " + err.message);
     });
 }
 
 document.getElementById('btn-cerrar').onclick = function() {
     document.getElementById('vista-visor').style.display = 'none';
     document.getElementById('vista-menu').style.display = 'block';
+    setViewportZoom(false);
 };
 
+// GESTIÓN DE SIDEBAR (MENÚ LATERAL)
+function abrirSidebar() {
+    if (sidebar) sidebar.style.display = 'block';
+    if (overlay) overlay.className = 'activo';
+}
+
+function cerrarSidebar() {
+    if (sidebar && window.innerWidth <= 768) {
+        sidebar.style.display = 'none';
+    }
+    if (overlay) overlay.className = '';
+}
+
 document.getElementById('btn-toggle-sidebar').onclick = function() {
-    var s = document.getElementById('sidebar-temas');
-    if (s.style.display === 'block') s.style.display = 'none';
-    else s.style.display = 'block';
+    if (sidebar && sidebar.style.display === 'block') {
+        cerrarSidebar();
+    } else {
+        abrirSidebar();
+    }
 };
+
+if (overlay) {
+    overlay.onclick = cerrarSidebar;
+}
+
+var btnCerrarSidebar = document.getElementById('btn-cerrar-sidebar');
+if (btnCerrarSidebar) {
+    btnCerrarSidebar.onclick = cerrarSidebar;
+}
 
 // INICIAR PROCESO
 cargarDatos();

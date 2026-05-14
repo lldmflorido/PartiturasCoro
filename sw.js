@@ -6,11 +6,11 @@ const ARCHIVOS_BASE = [
     './index.html',
     './css/estilos.css',
     './js/app.js',
+    './js/pdf.min.js',
+    './js/pdf.worker.min.js',
     './manifest.json',
     './icono.png',
-    './cantos.json',
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.min.mjs',
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.worker.min.mjs'
+    './cantos.json'
 ];
 
 // Instalación: Solo guardamos el "esqueleto" de la app
