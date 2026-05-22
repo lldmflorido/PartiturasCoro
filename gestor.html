@@ -16,56 +16,83 @@
 </head>
 <body>
     <header class="cabecera-gestor">
-        <div class="logo-gestor"><h2>Gestor</h2></div>
-        <div class="controles-cabecera oculto" id="controles-cabecera">
-            <span id="contador-cambios" class="badge-cambios">0 Cambios</span>
-            <button id="btn-sincronizar" class="btn-sincronizar" disabled>Sincronizar</button>
-            <button id="btn-cerrar-sesion" class="btn-secundario">Salir</button>
+        <div class="logo-gestor"><h2>Gestor Local Directo</h2></div>
+        <div class="controles-cabecera" id="controles-cabecera">
+            <button id="btn-vincular-carpeta" class="btn-sincronizar">Vincular Carpeta Proyecto</button>
+            <span id="estado-carpeta" style="font-size: 12px; color: #666;">Carpeta no vinculada</span>
+            <a href="index.html" class="btn-secundario" style="text-decoration: none;">Ver Repertorio</a>
         </div>
     </header>
 
     <main class="contenedor-principal">
-        <section id="seccion-login" class="panel contenedor-centrado">
-            <h3>Acceso</h3>
-            <input type="password" id="input-token" placeholder="Llave (Token)" style="width:100%; padding:10px; margin:10px 0;">
-            <button id="btn-acceder" class="btn-primario">Entrar</button>
-            <div id="mensaje-login"></div>
-        </section>
-
-        <section id="seccion-trabajo" class="oculto">
+        <section id="seccion-trabajo">
             <div class="barra-herramientas">
-                <input type="text" id="buscador-gestor" placeholder="Filtrar...">
-                <button id="btn-nuevo-canto" class="btn-primario">+ Nuevo</button>
+                <input type="text" id="buscador-gestor" placeholder="Filtrar cantos...">
+                <button id="btn-nuevo-canto" class="btn-primario" disabled>+ Nuevo Canto</button>
             </div>
-            <div class="panel" style="overflow:auto;">
+            <div class="panel">
                 <table class="tabla-datos">
-                    <thead><tr><th>Canto</th><th>Acciones</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Temas</th>
+                            <th>Fecha</th>
+                            <th>Archivo PDF</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
                     <tbody id="cuerpo-tabla-cantos"></tbody>
                 </table>
             </div>
         </section>
     </main>
 
-    <!-- Modales simplificados para iPad -->
-    <div id="modal-formulario" class="modal-overlay oculto" style="background:rgba(0,0,0,0.8); z-index:1000;">
-        <div class="modal-contenido" style="background:white; padding:20px; margin:20px; border-radius:10px;">
-            <h3 id="titulo-modal">Canto</h3>
-            <input type="hidden" id="indice-canto">
-            <label>Título:</label><br>
-            <input type="text" id="nombre-canto" style="width:100%; padding:8px;"><br><br>
-            <label>Temas (Comas):</label><br>
-            <input type="text" id="temas-canto" style="width:100%; padding:8px;"><br><br>
-            <label>PDF:</label><br>
-            <input type="file" id="archivo-pdf" accept=".pdf"><br><br>
-            <button id="btn-guardar-local" class="btn-primario">Guardar</button>
-            <button id="btn-cerrar-formulario" class="btn-secundario">Cancelar</button>
+    <!-- Modal Formulario -->
+    <div id="modal-formulario" class="modal-overlay oculto">
+        <div class="modal-contenido">
+            <div class="modal-cabecera">
+                <h3 id="titulo-modal">Canto</h3>
+                <button id="btn-cerrar-formulario" class="btn-cerrar-modal">&times;</button>
+            </div>
+            <div class="modal-cuerpo">
+                <input type="hidden" id="indice-canto">
+                
+                <div class="grupo-formulario">
+                    <label>Título del Canto:</label>
+                    <input type="text" id="nombre-canto" placeholder="Ej: Alabad a Jehová">
+                </div>
+
+                <div class="grupo-formulario">
+                    <label>Temas (separados por comas):</label>
+                    <input type="text" id="temas-canto" placeholder="Ej: Alabanza, Adoración">
+                </div>
+
+                <div class="grupo-formulario">
+                    <label>Archivo PDF:</label>
+                    <div id="contenedor-archivo-actual" class="oculto" style="margin-bottom: 10px; font-size: 13px;">
+                        Archivo actual: <span id="nombre-archivo-actual" style="font-weight: bold;"></span>
+                    </div>
+                    <input type="file" id="input-archivo-pdf" accept=".pdf">
+                    <p class="texto-ayuda">Si seleccionas un archivo, se copiará automáticamente a la carpeta /Partituras</p>
+                </div>
+            </div>
+            <div class="modal-pie">
+                <button id="btn-cancelar-formulario" class="btn-secundario">Cancelar</button>
+                <button id="btn-guardar-directo" class="btn-primario">Guardar y Aplicar</button>
+            </div>
         </div>
     </div>
 
-    <div id="modal-carga" class="modal-overlay oculto">
-        <div class="modal-contenido centrado">
-            <h3>Procesando...</h3>
-            <p id="texto-carga">Subiendo datos...</p>
+    <!-- Modal Confirmación -->
+    <div id="modal-confirmacion" class="modal-overlay oculto">
+        <div class="modal-contenido modal-pequeno">
+            <div class="modal-cuerpo centrado">
+                <h3 id="texto-confirmacion">¿Estás seguro?</h3>
+            </div>
+            <div class="modal-pie" style="justify-content: center;">
+                <button id="btn-cancelar-confirmacion" class="btn-secundario">No, volver</button>
+                <button id="btn-aceptar-confirmacion" class="btn-peligro">Sí, confirmar</button>
+            </div>
         </div>
     </div>
 

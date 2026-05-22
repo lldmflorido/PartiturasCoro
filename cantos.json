@@ -136,6 +136,14 @@
     ]
   },
   {
+    "nombre": "Ante Tu Altar",
+    "archivo": "Ante Tu Altar.pdf",
+    "temas": [
+      "Consagración"
+    ],
+    "fecha": "2026-05-22"
+  },
+  {
     "nombre": "Años Mi Alma en Vanidad Vivió",
     "archivo": "Años Mi Alma en Vanidad Vivió (Gracia).pdf",
     "temas": [
@@ -567,10 +575,11 @@
   },
   {
     "nombre": "El Tercer Ángel",
-    "archivo": "El Tercer Ángel (Elección).pdf",
+    "archivo": "El Tercer Ángel.pdf",
     "temas": [
       "Elección"
-    ]
+    ],
+    "fecha": "2026-05-22"
   },
   {
     "nombre": "Elección",
@@ -875,6 +884,14 @@
     "temas": [
       "Alabanza"
     ]
+  },
+  {
+    "nombre": "Jehová Te Bendiga y Te Guarde",
+    "archivo": "Jehová Te Bendiga y Te Guarde (1).pdf",
+    "temas": [
+      "Despedida"
+    ],
+    "fecha": "2026-05-22"
   },
   {
     "nombre": "Jesucristo mi Alma te Alaba",
@@ -1210,6 +1227,14 @@
     ]
   },
   {
+    "nombre": "Padre Tu Significas",
+    "archivo": "Padre Tu Significas.pdf",
+    "temas": [
+      "Elección"
+    ],
+    "fecha": "2026-05-22"
+  },
+  {
     "nombre": "Padre, a tus Pies me Postro",
     "archivo": "Padre, a tus Pies me Postro (Avivamiento Espiritual _ Suplica).pdf",
     "temas": [
@@ -1452,6 +1477,14 @@
     "temas": [
       "Consagración"
     ]
+  },
+  {
+    "nombre": "Señor Jesús Cuan Bella",
+    "archivo": "Señor Jesús, Cuán Bella.pdf",
+    "temas": [
+      "Gozo"
+    ],
+    "fecha": "2026-05-22"
   },
   {
     "nombre": "Señor mi Dios",
