@@ -19,6 +19,7 @@ function cargarDatos() {
                 cantos = JSON.parse(xhr.responseText);
                 renderizarMenu();
                 renderizarCantos();
+                verificarEstadoOffline();
             } catch (e) {
                 console.error("Error al parsear JSON", e);
             }
@@ -152,9 +153,29 @@ window.abrirPDF = function(index) {
 
 function dibujarPagina(pdf, num, canvas) {
     pdf.getPage(num).then(function(page) {
-        var viewport = page.getViewport(1.3);
+        // En PDF.js v1 y v2, getViewport puede recibir directamente el número (escala) o un objeto {scale: 1}
+        // Usaremos 1 para medir el ancho base
+        var unscaledViewport = page.getViewport(1.0);
+        
+        // En lugar de multiplicar ciegamente por devicePixelRatio (que puede colapsar la RAM en iOS),
+        // buscamos una resolución objetivo legible. Una pantalla de tablet/móvil se ve nítida a ~1500px de ancho.
+        var resolucionObjetivo = window.innerWidth * (window.devicePixelRatio || 1);
+        var anchoMaximoSeguro = 1500; 
+        
+        var anchoRender = Math.min(resolucionObjetivo, anchoMaximoSeguro);
+        
+        // Calculamos la escala necesaria para llegar a esa resolución óptima
+        var scale = anchoRender / unscaledViewport.width;
+        
+        // Limitamos para evitar PDFs microscópicos o gigantes
+        if (scale < 1.3) scale = 1.3;
+        if (scale > 3.0) scale = 3.0;
+
+        var viewport = page.getViewport(scale);
+        
         canvas.height = viewport.height;
         canvas.width = viewport.width;
+        
         var ctx = canvas.getContext('2d');
         page.render({ canvasContext: ctx, viewport: viewport });
     });
@@ -168,19 +189,17 @@ document.getElementById('btn-cerrar').onclick = function() {
 
 // GESTIÓN DE SIDEBAR (MENÚ LATERAL)
 function abrirSidebar() {
-    if (sidebar) sidebar.style.display = 'block';
-    if (overlay) overlay.className = 'activo';
+    if (sidebar) sidebar.classList.add('activo');
+    if (overlay) overlay.classList.add('activo');
 }
 
 function cerrarSidebar() {
-    if (sidebar && window.innerWidth <= 768) {
-        sidebar.style.display = 'none';
-    }
-    if (overlay) overlay.className = '';
+    if (sidebar) sidebar.classList.remove('activo');
+    if (overlay) overlay.classList.remove('activo');
 }
 
 document.getElementById('btn-toggle-sidebar').onclick = function() {
-    if (sidebar && sidebar.style.display === 'block') {
+    if (sidebar && sidebar.classList.contains('activo')) {
         cerrarSidebar();
     } else {
         abrirSidebar();
@@ -229,6 +248,33 @@ if (btnTema) {
 var btnDescargarTodo = document.getElementById('btn-descargar-todo');
 var progresoDescarga = document.getElementById('progreso-descarga');
 
+function verificarEstadoOffline() {
+    var indicador = document.getElementById('indicador-offline');
+    var btnDescarga = document.getElementById('btn-descargar-todo');
+    
+    if ('caches' in window) {
+        caches.open('COROFLORIDO-PDFS-v1').then(function(cache) {
+            cache.keys().then(function(keys) {
+                var total = cantos ? cantos.length : 0;
+                var descargados = keys.length;
+                
+                if (indicador && total > 0) {
+                    if (descargados > 0) {
+                        indicador.style.display = 'flex';
+                        indicador.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; color: #d4af37;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>' + descargados + ' / ' + total + ' OFFLINE';
+                        
+                        if (descargados >= total && btnDescarga && btnDescarga.innerHTML.indexOf("Descargar Todas") !== -1) {
+                            btnDescarga.innerHTML = "Actualizar Descargas";
+                        }
+                    } else {
+                        indicador.style.display = 'none';
+                    }
+                }
+            });
+        }).catch(function(e) { console.error(e); });
+    }
+}
+
 if (btnDescargarTodo) {
     btnDescargarTodo.onclick = function() {
         if (!cantos || cantos.length === 0) return;
@@ -242,11 +288,21 @@ if (btnDescargarTodo) {
         
         function descargarSiguiente(index) {
             if (index >= cantos.length) {
-                btnDescargarTodo.innerHTML = "¡Descarga Completa!";
-                btnDescargarTodo.style.background = "#2e7d32"; // verde
+                btnDescargarTodo.innerHTML = "¡Partituras Guardadas!";
+                // Evitamos el verde, usamos el estilo tenue del modo lectura
+                btnDescargarTodo.style.background = "var(--color-input-fondo)";
+                btnDescargarTodo.style.color = "var(--color-texto-suave)";
+                btnDescargarTodo.style.borderColor = "var(--color-borde)";
+                
+                // Actualizamos el contador real
+                verificarEstadoOffline();
+
                 setTimeout(function() {
-                    btnDescargarTodo.innerHTML = "Descargar Todas (Offline)";
-                    btnDescargarTodo.style.background = "var(--color-acento)";
+                    btnDescargarTodo.innerHTML = "Actualizar Descargas";
+                    // Restauramos los colores originales del botón dorado tenue
+                    btnDescargarTodo.style.background = "rgba(212, 175, 55, 0.1)";
+                    btnDescargarTodo.style.color = "var(--color-acento-fuerte)";
+                    btnDescargarTodo.style.borderColor = "var(--color-acento)";
                     btnDescargarTodo.disabled = false;
                     progresoDescarga.style.display = "none";
                 }, 4000);

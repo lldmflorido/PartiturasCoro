@@ -7,6 +7,7 @@
     
     <!-- Meta tags para "Instalar" como App en iPad (Pantalla completa sin Safari) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Repertorio">
     <link rel="apple-touch-icon" href="icono.png">
@@ -26,15 +27,38 @@
 
     <div id="vista-menu" class="layout-principal">
         <aside id="sidebar-temas">
-            <button id="btn-cerrar-sidebar">CERRAR</button>
+            <button id="btn-cerrar-sidebar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
             <div class="logo-sidebar">
     		    <h2>Repertorio</h2>
-                <span id="contador-cantos" class="contador-estilo">0</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="contador-cantos" class="contador-estilo">0</span>
+                    <div id="indicador-offline" style="display: none; align-items: center; font-size: 11px; color: var(--color-texto-suave); font-weight: bold; background: var(--color-superficie-secundaria); padding: 4px 8px; border-radius: 12px; border: 1px solid var(--color-borde);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; color: #d4af37;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        OFFLINE
+                    </div>
+                </div>
 	        </div>
-            <ul id="lista-temas"></ul>
-            <div style="padding: 20px; border-top: 1px solid var(--color-borde); margin-top: 20px;">
-                <button id="btn-descargar-todo" style="width: 100%; padding: 10px; background: var(--color-acento); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                    Descargar Todas (Offline)
+            
+            <div class="sidebar-scroll">
+                <div class="sidebar-seccion">
+                    <p class="section-label" style="padding: 0 20px; font-size: 12px; font-weight: bold; color: var(--color-texto-suave); margin-bottom: 10px;">FILTRAR POR TEMA</p>
+                    <ul id="lista-temas"></ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="btn-descargar-todo" style="width: 100%; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(212, 175, 55, 0.1); color: var(--color-acento-fuerte); border: 1px solid var(--color-acento); border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Descargar Todas
                 </button>
                 <p id="progreso-descarga" style="font-size: 12px; color: var(--color-texto-suave); text-align: center; margin-top: 5px; display: none;">0 / 0</p>
             </div>
@@ -45,11 +69,28 @@
                 <button id="btn-toggle-sidebar" class="btn-topbar">TEMAS</button>
                 <div class="contenedor-buscador">
                     <input type="text" id="buscador" placeholder="Buscar canto...">
-                    <button id="btn-limpiar-busqueda" class="oculto">X</button>
+                    <button id="btn-limpiar-busqueda" class="oculto" title="Borrar búsqueda">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
                 <button id="btn-selector-tema" class="btn-topbar" title="Seleccionar tema visual">
-                    <span class="icono-tema-luna">🌙</span>
-                    <span class="icono-tema-sol" style="display: none;">☀️</span>
+                    <svg class="icono-tema-luna" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3c0 0 0 0 0 0a7 7 0 0 0 9.79 9.79z"></path>
+                    </svg>
+                    <svg class="icono-tema-sol" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
                 </button>
             </header>
             <div id="lista-cantos" class="lista-vertical">
@@ -70,7 +111,9 @@
     <div id="banner-actualizacion" class="banner-vivo" style="display: none;">
         <span class="banner-texto">NUEVA VERSIÓN DISPONIBLE</span>
         <button id="btn-actualizar-app" class="banner-btn">ACTUALIZAR</button>
-        <button id="btn-cerrar-actualizacion" class="btn-cerrar-banner">X</button>
+        <button id="btn-cerrar-actualizacion" class="btn-cerrar-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
     </div>
 
     <!-- Carga de librerías locales únicamente -->
