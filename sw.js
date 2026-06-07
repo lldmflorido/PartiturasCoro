@@ -41,14 +41,29 @@ self.addEventListener('fetch', event => {
     const url = event.request.url;
 
     if (url.includes('.pdf')) {
-        // Para PDFs: Si ya está en caché, no uses internet nunca
+        // Para PDFs: Si ya está en caché se usa, sino se descarga y SE GUARDA
         event.respondWith(
-            caches.match(event.request).then(res => res || fetch(event.request))
+            caches.match(event.request).then(function(res) {
+                if (res) return res;
+                return fetch(event.request).then(function(networkRes) {
+                    return caches.open(CACHE_PARTITURAS).then(function(cache) {
+                        cache.put(event.request, networkRes.clone());
+                        return networkRes;
+                    });
+                });
+            })
         );
     } else {
         // Para lo demás: Intenta internet para estar actualizado
         event.respondWith(
             fetch(event.request).catch(() => caches.match(event.request))
         );
+    }
+});
+
+// Escuchar mensaje para forzar actualización inmediata (SKIP_WAITING)
+self.addEventListener('message', function(event) {
+    if (event.data === 'SKIP_WAITING') {
+        self.skipWaiting();
     }
 });

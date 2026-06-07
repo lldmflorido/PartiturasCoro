@@ -196,5 +196,81 @@ if (btnCerrarSidebar) {
     btnCerrarSidebar.onclick = cerrarSidebar;
 }
 
+// --- SISTEMA DE TEMAS ---
+var btnTema = document.getElementById('btn-selector-tema');
+var luna = document.querySelector('.icono-tema-luna');
+var sol = document.querySelector('.icono-tema-sol');
+
+function aplicarTema(oscuro) {
+    if (oscuro) {
+        document.documentElement.classList.add('tema-oscuro');
+        if (luna) luna.style.display = 'none';
+        if (sol) sol.style.display = 'inline';
+    } else {
+        document.documentElement.classList.remove('tema-oscuro');
+        if (luna) luna.style.display = 'inline';
+        if (sol) sol.style.display = 'none';
+    }
+}
+
+if (btnTema) {
+    var temaGuardado = localStorage.getItem('tema-coro');
+    var esOscuro = temaGuardado === 'oscuro';
+    aplicarTema(esOscuro);
+
+    btnTema.onclick = function() {
+        esOscuro = !esOscuro;
+        localStorage.setItem('tema-coro', esOscuro ? 'oscuro' : 'claro');
+        aplicarTema(esOscuro);
+    };
+}
+
+// --- DESCARGA OFFLINE (CACHÉ) ---
+var btnDescargarTodo = document.getElementById('btn-descargar-todo');
+var progresoDescarga = document.getElementById('progreso-descarga');
+
+if (btnDescargarTodo) {
+    btnDescargarTodo.onclick = function() {
+        if (!cantos || cantos.length === 0) return;
+        
+        btnDescargarTodo.disabled = true;
+        btnDescargarTodo.innerHTML = "Descargando...";
+        progresoDescarga.style.display = "block";
+        progresoDescarga.innerHTML = "0 / " + cantos.length;
+        
+        var descargados = 0;
+        
+        function descargarSiguiente(index) {
+            if (index >= cantos.length) {
+                btnDescargarTodo.innerHTML = "¡Descarga Completa!";
+                btnDescargarTodo.style.background = "#2e7d32"; // verde
+                setTimeout(function() {
+                    btnDescargarTodo.innerHTML = "Descargar Todas (Offline)";
+                    btnDescargarTodo.style.background = "var(--color-acento)";
+                    btnDescargarTodo.disabled = false;
+                    progresoDescarga.style.display = "none";
+                }, 4000);
+                return;
+            }
+            
+            var urlPdf = 'Partituras/' + encodeURIComponent(cantos[index].archivo);
+            
+            // fetch pasará por el Service Worker y será cacheado
+            fetch(urlPdf, { cache: 'no-cache' }).then(function(res) {
+                descargados++;
+                progresoDescarga.innerHTML = descargados + " / " + cantos.length;
+                descargarSiguiente(index + 1);
+            }).catch(function(err) {
+                console.error("Error al descargar " + urlPdf, err);
+                descargados++; // Continuar aunque falle
+                progresoDescarga.innerHTML = descargados + " / " + cantos.length;
+                descargarSiguiente(index + 1);
+            });
+        }
+        
+        descargarSiguiente(0);
+    };
+}
+
 // INICIAR PROCESO
 cargarDatos();

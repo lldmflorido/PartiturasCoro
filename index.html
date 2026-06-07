@@ -32,12 +32,25 @@
                 <span id="contador-cantos" class="contador-estilo">0</span>
 	        </div>
             <ul id="lista-temas"></ul>
+            <div style="padding: 20px; border-top: 1px solid var(--color-borde); margin-top: 20px;">
+                <button id="btn-descargar-todo" style="width: 100%; padding: 10px; background: var(--color-acento); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    Descargar Todas (Offline)
+                </button>
+                <p id="progreso-descarga" style="font-size: 12px; color: var(--color-texto-suave); text-align: center; margin-top: 5px; display: none;">0 / 0</p>
+            </div>
         </aside>
 
         <main class="contenido-derecho">
             <header class="cabecera-menu">
-                <button id="btn-toggle-sidebar">TEMAS</button>
-                <input type="text" id="buscador" placeholder="Buscar canto...">
+                <button id="btn-toggle-sidebar" class="btn-topbar">TEMAS</button>
+                <div class="contenedor-buscador">
+                    <input type="text" id="buscador" placeholder="Buscar canto...">
+                    <button id="btn-limpiar-busqueda" class="oculto">X</button>
+                </div>
+                <button id="btn-selector-tema" class="btn-topbar" title="Seleccionar tema visual">
+                    <span class="icono-tema-luna">🌙</span>
+                    <span class="icono-tema-sol" style="display: none;">☀️</span>
+                </button>
             </header>
             <div id="lista-cantos" class="lista-vertical">
                 <p style="padding:20px; text-align:center;">Buscando cantos en la base de datos...</p>
@@ -53,19 +66,78 @@
         <div id="contenedor-pdf"></div>
     </div>
 
+    <!-- Banner Actualización PWA -->
+    <div id="banner-actualizacion" class="banner-vivo" style="display: none;">
+        <span class="banner-texto">NUEVA VERSIÓN DISPONIBLE</span>
+        <button id="btn-actualizar-app" class="banner-btn">ACTUALIZAR</button>
+        <button id="btn-cerrar-actualizacion" class="btn-cerrar-banner">X</button>
+    </div>
+
     <!-- Carga de librerías locales únicamente -->
     <script src="js/pdf.min.js"></script>
     <script src="js/app.js"></script>
     
     <script>
-        // Registro de Service Worker (Solo para dispositivos modernos)
+        // Registro de Service Worker con soporte para Toast (ES5 para iOS 12)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
+                var refreshing = false;
+                
+                // Cuando el nuevo SW toma el control, recargamos la página una sola vez
+                navigator.serviceWorker.addEventListener('controllerchange', function() {
+                    if (!refreshing) {
+                        refreshing = true;
+                        window.location.reload();
+                    }
+                });
+
                 navigator.serviceWorker.register('./sw.js').then(function(reg) {
                     console.log('Service Worker registrado con éxito');
+                    
+                    if (reg.waiting) {
+                        mostrarToastActualizacion(reg.waiting);
+                        return;
+                    }
+
+                    if (reg.installing) {
+                        rastrearInstalacion(reg.installing);
+                        return;
+                    }
+
+                    reg.addEventListener('updatefound', function() {
+                        rastrearInstalacion(reg.installing);
+                    });
+
                 }).catch(function(err) {
                     console.log('Fallo al registrar Service Worker:', err);
                 });
+
+                function rastrearInstalacion(worker) {
+                    worker.addEventListener('statechange', function() {
+                        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                            mostrarToastActualizacion(worker);
+                        }
+                    });
+                }
+
+                function mostrarToastActualizacion(worker) {
+                    var banner = document.getElementById('banner-actualizacion');
+                    var btnActualizar = document.getElementById('btn-actualizar-app');
+                    var btnCerrar = document.getElementById('btn-cerrar-actualizacion');
+                    
+                    if (banner) {
+                        banner.style.display = 'flex';
+                        
+                        btnActualizar.onclick = function() {
+                            banner.style.display = 'none';
+                            worker.postMessage('SKIP_WAITING');
+                        };
+                        
+                        btnCerrar.onclick = function() {
+                            banner.style.display = 'none';
+                        };
+                    }
+                }
             });
         }
     </script>
