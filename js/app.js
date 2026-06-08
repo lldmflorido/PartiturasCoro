@@ -153,25 +153,8 @@ window.abrirPDF = function(index) {
 
 function dibujarPagina(pdf, num, canvas) {
     pdf.getPage(num).then(function(page) {
-        // En PDF.js v1 y v2, getViewport puede recibir directamente el número (escala) o un objeto {scale: 1}
-        // Usaremos 1 para medir el ancho base
-        var unscaledViewport = page.getViewport(1.0);
-        
-        // En lugar de multiplicar ciegamente por devicePixelRatio (que puede colapsar la RAM en iOS),
-        // buscamos una resolución objetivo legible. Una pantalla de tablet/móvil se ve nítida a ~1500px de ancho.
-        var resolucionObjetivo = window.innerWidth * (window.devicePixelRatio || 1);
-        var anchoMaximoSeguro = 1500; 
-        
-        var anchoRender = Math.min(resolucionObjetivo, anchoMaximoSeguro);
-        
-        // Calculamos la escala necesaria para llegar a esa resolución óptima
-        var scale = anchoRender / unscaledViewport.width;
-        
-        // Limitamos para evitar PDFs microscópicos o gigantes
-        if (scale < 1.3) scale = 1.3;
-        if (scale > 3.0) scale = 3.0;
-
-        var viewport = page.getViewport(scale);
+        // Escala fija a 1.2 como solicitó el usuario para evitar el problema de renderizado blanco
+        var viewport = page.getViewport(1.2);
         
         canvas.height = viewport.height;
         canvas.width = viewport.width;
